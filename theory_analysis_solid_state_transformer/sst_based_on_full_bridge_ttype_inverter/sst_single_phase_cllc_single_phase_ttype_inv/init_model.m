@@ -445,38 +445,38 @@ for i = 1:length(open_scopes)
 end
 
 %[text] ### Enable/Disable Subsystems
-if use_mosfet_thermal_model %[output:group:79749281]
-    set_param('afe_inv_psm/afe_abc_inv_psm_mod1/afe/three_phase_inverter_mosfet_based_with_thermal_model', 'Commented', 'off');
-    set_param('afe_inv_psm/afe_abc_inv_psm_mod1/afe/three_phase_inverter_igbt_based_with_thermal_model', 'Commented', 'on');
-    set_param('afe_inv_psm/afe_abc_inv_psm_mod1/afe/three_phase_inverter_ideal_switch_based_model', 'Commented', 'on');
-    set_param('afe_inv_psm/afe_abc_inv_psm_mod1/inverter/inverter/three_phase_inverter_mosfet_based_with_thermal_model', 'Commented', 'off');
-    set_param('afe_inv_psm/afe_abc_inv_psm_mod1/inverter/inverter/three_phase_inverter_igbt_based_with_thermal_model', 'Commented', 'on');
-    set_param('afe_inv_psm/afe_abc_inv_psm_mod1/inverter/inverter/three_phase_inverter_ideal_switch_based_model', 'Commented', 'on');
-else
-    if use_thermal_model
-        set_param('afe_inv_psm/afe_abc_inv_psm_mod1/afe/three_phase_inverter_mosfet_based_with_thermal_model', 'Commented', 'on');
-        set_param('afe_inv_psm/afe_abc_inv_psm_mod1/inverter/inverter/three_phase_inverter_mosfet_based_with_thermal_model', 'Commented', 'on');
-        set_param('afe_inv_psm/afe_abc_inv_psm_mod1/afe/three_phase_inverter_igbt_based_with_thermal_model', 'Commented', 'off');
-        set_param('afe_inv_psm/afe_abc_inv_psm_mod1/afe/three_phase_inverter_ideal_switch_based_model', 'Commented', 'on');
-        set_param('afe_inv_psm/afe_abc_inv_psm_mod1/inverter/inverter/three_phase_inverter_igbt_based_with_thermal_model', 'Commented', 'off');
-        set_param('afe_inv_psm/afe_abc_inv_psm_mod1/inverter/inverter/three_phase_inverter_ideal_switch_based_model', 'Commented', 'on');
-    else
-        set_param('afe_inv_psm/afe_abc_inv_psm_mod1/afe/three_phase_inverter_mosfet_based_with_thermal_model', 'Commented', 'on'); %[output:546c7dc9]
-        set_param('afe_inv_psm/afe_abc_inv_psm_mod1/inverter/inverter/three_phase_inverter_mosfet_based_with_thermal_model', 'Commented', 'on');
-        set_param('afe_inv_psm/afe_abc_inv_psm_mod1/afe/three_phase_inverter_igbt_based_with_thermal_model', 'Commented', 'on');
-        set_param('afe_inv_psm/afe_abc_inv_psm_mod1/afe/three_phase_inverter_ideal_switch_based_model', 'Commented', 'off');
-        set_param('afe_inv_psm/afe_abc_inv_psm_mod1/inverter/inverter/three_phase_inverter_igbt_based_with_thermal_model', 'Commented', 'on');
-        set_param('afe_inv_psm/afe_abc_inv_psm_mod1/inverter/inverter/three_phase_inverter_ideal_switch_based_model', 'Commented', 'off');
-    end
-end %[output:group:79749281]
-
-if use_torque_curve
-    set_param('afe_inv_psm/fixed_speed_setting', 'Commented', 'off');
-    set_param('afe_inv_psm/motor_load_setting', 'Commented', 'on');
-else
-    set_param('afe_inv_psm/fixed_speed_setting', 'Commented', 'on');
-    set_param('afe_inv_psm/motor_load_setting', 'Commented', 'off');
-end
+% if use_mosfet_thermal_model
+%     set_param('afe_inv_psm/afe_abc_inv_psm_mod1/afe/three_phase_inverter_mosfet_based_with_thermal_model', 'Commented', 'off');
+%     set_param('afe_inv_psm/afe_abc_inv_psm_mod1/afe/three_phase_inverter_igbt_based_with_thermal_model', 'Commented', 'on');
+%     set_param('afe_inv_psm/afe_abc_inv_psm_mod1/afe/three_phase_inverter_ideal_switch_based_model', 'Commented', 'on');
+%     set_param('afe_inv_psm/afe_abc_inv_psm_mod1/inverter/inverter/three_phase_inverter_mosfet_based_with_thermal_model', 'Commented', 'off');
+%     set_param('afe_inv_psm/afe_abc_inv_psm_mod1/inverter/inverter/three_phase_inverter_igbt_based_with_thermal_model', 'Commented', 'on');
+%     set_param('afe_inv_psm/afe_abc_inv_psm_mod1/inverter/inverter/three_phase_inverter_ideal_switch_based_model', 'Commented', 'on');
+% else
+%     if use_thermal_model
+%         set_param('afe_inv_psm/afe_abc_inv_psm_mod1/afe/three_phase_inverter_mosfet_based_with_thermal_model', 'Commented', 'on');
+%         set_param('afe_inv_psm/afe_abc_inv_psm_mod1/inverter/inverter/three_phase_inverter_mosfet_based_with_thermal_model', 'Commented', 'on');
+%         set_param('afe_inv_psm/afe_abc_inv_psm_mod1/afe/three_phase_inverter_igbt_based_with_thermal_model', 'Commented', 'off');
+%         set_param('afe_inv_psm/afe_abc_inv_psm_mod1/afe/three_phase_inverter_ideal_switch_based_model', 'Commented', 'on');
+%         set_param('afe_inv_psm/afe_abc_inv_psm_mod1/inverter/inverter/three_phase_inverter_igbt_based_with_thermal_model', 'Commented', 'off');
+%         set_param('afe_inv_psm/afe_abc_inv_psm_mod1/inverter/inverter/three_phase_inverter_ideal_switch_based_model', 'Commented', 'on');
+%     else
+%         set_param('afe_inv_psm/afe_abc_inv_psm_mod1/afe/three_phase_inverter_mosfet_based_with_thermal_model', 'Commented', 'on');
+%         set_param('afe_inv_psm/afe_abc_inv_psm_mod1/inverter/inverter/three_phase_inverter_mosfet_based_with_thermal_model', 'Commented', 'on');
+%         set_param('afe_inv_psm/afe_abc_inv_psm_mod1/afe/three_phase_inverter_igbt_based_with_thermal_model', 'Commented', 'on');
+%         set_param('afe_inv_psm/afe_abc_inv_psm_mod1/afe/three_phase_inverter_ideal_switch_based_model', 'Commented', 'off');
+%         set_param('afe_inv_psm/afe_abc_inv_psm_mod1/inverter/inverter/three_phase_inverter_igbt_based_with_thermal_model', 'Commented', 'on');
+%         set_param('afe_inv_psm/afe_abc_inv_psm_mod1/inverter/inverter/three_phase_inverter_ideal_switch_based_model', 'Commented', 'off');
+%     end
+% end
+% 
+% if use_torque_curve
+%     set_param('afe_inv_psm/fixed_speed_setting', 'Commented', 'off');
+%     set_param('afe_inv_psm/motor_load_setting', 'Commented', 'on');
+% else
+%     set_param('afe_inv_psm/fixed_speed_setting', 'Commented', 'on');
+%     set_param('afe_inv_psm/motor_load_setting', 'Commented', 'off');
+% end
 
 %[appendix]{"version":"1.0"}
 %---
@@ -527,7 +527,4 @@ end
 %---
 %[output:953f5772]
 %   data: {"dataType":"warning","outputData":{"text":"Warning: Block diagram '<a href=\"matlab:open_system ('pi_ctrl')\">pi_ctrl<\/a>' is shadowed by a variable of the same name."}}
-%---
-%[output:546c7dc9]
-%   data: {"dataType":"error","outputData":{"errorType":"runtime","text":"Invalid Simulink object name: 'afe_inv_psm\/afe_abc_inv_psm_mod1\/afe\/three_phase_inverter_mosfet_based_with_thermal_model'.\nCaused by:\n    Error using <a href=\"matlab:matlab.lang.internal.introspective.errorDocCallback('init_model', 'C:\\Git\\GitHub\\solid_state_transformers\\theory_analysis_solid_state_transformer\\sst_based_on_full_bridge_ttype_inverter\\sst_single_phase_cllc_single_phase_ttype_inv\\init_model.m', 464)\" style=\"font-weight:bold\">init_model<\/a> (<a href=\"matlab: opentoline('C:\\Git\\GitHub\\solid_state_transformers\\theory_analysis_solid_state_transformer\\sst_based_on_full_bridge_ttype_inverter\\sst_single_phase_cllc_single_phase_ttype_inv\\init_model.m',464,0)\">line 464<\/a>)\n    The block diagram 'afe_inv_psm' is not loaded."}}
 %---
