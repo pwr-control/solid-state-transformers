@@ -1,71 +1,48 @@
-# Solid state transformers
+# solid-state-transformers
 
-This repo contains a collection of simscape models concerning the Solid State Transformers (SSTs). Basically the repo is a on working study on different SSTs architectures. 
+Simulink/Simscape study of solid-state transformer (SST) architectures built from
+*modules*, where a module is a galvanically isolated DC-DC converter followed by a
+single-phase inverter: modules are paralleled on the DC side and their inverters are
+series-connected on the AC side. The repository compares the isolated DC-DC stage
+(single-phase DAB vs. resonant CLLC) feeding a three-level T-type single-phase inverter,
+and includes first-cut sizing scripts for the medium-frequency transformers.
 
-**How to use this repository**:
-- Add to matlab **path/with-subfolders** the repository **library**. The library repo contains all fundamentals simscape (ssc) models compiled by "ssc_build".
-    - The folder ./library/user_defined_functions/ccaller contains a list of c-coded functions used inside the simulink models by ccallers.
-    - The folder ./library/foundation contains all simscape language based model used in the simulink models.
-    - The folder ./library/documentations contains documentation for most of the applications available on **modelization-and-control**, **solid_state_transformers**, and others repositories.
+Earlier variants with two-level and NPC inverters and with a three-phase DAB were removed
+from the tree in March 2026 (still in the git history); the three-phase DAB study lives in
+[advanced-dcdc-converters](https://github.com/pwr-control/advanced-dcdc-converters).
+Simulation results are discussed in the *solid_state_transformers* document published on
+the organization page (`pwr-control/docs/solid_state_transformers`).
 
- # Documentation
-Documentation is available into the **library** repository.
+## Prerequisites
 
- # Description of the repo
+- MATLAB with Simulink, Simscape and Simscape Electrical.
+- The companion [library](https://github.com/pwr-control/library) repository on the MATLAB
+  path **with subfolders**: masked power stages (full bridges with ideal switch / MOSFET
+  thermal / MOSFET ZVS models, three-level T-type inverter, DAB and three-level PWM
+  modulators with global TRGO, DC link, lithium-ion battery, single-phase transformer),
+  C-Caller control code, and the setup functions used by `init_model.m`
+  (`init_environment`, `timing_setup`, `*_hwdata`, `ctrl_dab_setup`, `ctrl_cllc_setup`,
+  `device_mosfet_setup`, ...).
 
-As known SST are build by a cascade of single-phase-inverter, where each one is galvanically insulated by DABs, LLCs and similar high efficient DC/DC converters.
+## How to use a project
 
-The repo investigates on finding an optimal implementation in terms of efficiency and controllability.
+1. Run `init_model.m` in the project folder: global timing (`fpwm = 4 kHz` for the
+   inverters with double update, `12 kHz` for DAB and CLLC), 690 V application voltage,
+   250 kW per DC-DC stage, `sst_num_of_modules = 2`, hardware data, controllers, device set
+   (SiC MOSFET `danfoss_SKM1700MB20R4S2I4` with thermal model enabled by default), battery
+   models; the model is opened at the end.
+2. Simulate the `.slx` (`simlength = 1.25 s`).
+3. Post-process with `plotting_results.m`, `power_loss_calculus.m` and `spectrum.m`;
+   figures go to `figures/` (EPS, ignored by git).
 
-Here a description of what folders contains.
+Each converter runs on its own local time base (`time_master`, `time_afe_A/B`,
+`time_cllc_A/B` in the model): modulators generate the control triggers, and the local
+clocks can be detuned to study the effect of time sliding between modules.
 
-**Remark** - each models implement a local time management on each DC/DC or DC/AC as well. Modulators generates trigger for the control system and the models permit 
-to implement effects on local time sliding.
+## Repository layout
 
-**theory analysis solid state transformer**:
-Investigantion on different SST architectures:
+| Folder | Content |
+|---|---|
+| [`theory_analysis_solid_state_transformer`](theory_analysis_solid_state_transformer) | The two SST benches (DAB + T-type inverter, CLLC + T-type inverter) and the transformer sizing scripts |
 
-For an easier description of the proposed architecture the term *module* is clarified as will be used.
-**module**: *module* means a block composed by an galvanically insolated DC/DC followed by a single phase inverter.
-
-***Description of the folders.***
-The taxonomy concerning the proposed architectures starts classifying the single phase inverter architectures following on different isolated DC/DC architectures, as follows.
-
-- two level full bridge;
-- three level NPC full bridge;
-- three level T-Type full bridge;
-
-- single phase DAB;
-- single phase resonant CLLC;
-- three phase DAB.
-
-In particular:
-
-**folder**: *sst_based_on_full_bridge_npc_inverter\sst_single_phase_dab_single_phase_npc_inv*: contains a two modules series/parallel based on single phase 
-DAB and a single phase inverted based on a three level NPC full bridge (H-bridge).
-
-**folder**: *sst_based_on_full_bridge_npc_inverter\sst_single_phase_cllc_single_phase_npc_inv*: contains a two modules series/parallel based on single phase 
-resonant CLLC and a single phase inverted based on a three level NPC full bridge (H-bridge).
-
-**folder**: *sst_based_on_full_bridge_npc_inverter\sst_three_phase_dab_single_phase_npc_inv*: contains a two modules series/parallel based on three phase 
-DAB and a single phase inverted based on a three level NPC full bridge (H-bridge).
-
-**folder**: *sst_based_on_full_bridge_ttype_inverter\sst_three_phase_dab_single_phase_ttype_inv*: contains a two modules series/parallel based on three phase 
-DAB and a single phase inverted based on a three level t-type full bridge (H-bridge).
-
-
-**Remark**: CLLC is tuned to achieve ZCS, and power flow is controlled by phase shift between primary/secondary full-bridges.
-
-**Some implemented details**
-- three phase DAB modulator run at 24kHz where at every step move one adjacent space vector resulting in a fundamental frequency of 4kHz;  
-- single phase CLLC runs at constant frequency of 13kHz, and power flow is controlled by phase shifting between primary and secondary;  
-- single phase DAB runs at constant frequency of 12kHz, and power flow is controlled by phase shifting between primary and secondary;  
-
-Results are presented in the document **library\documentation\solid_state_transformers\solid_state_transformers**
-
-- model implements two dab connected in parallel at battery side (800V);
-- output voltage of the iso DC/DC is 800V;
-- each dab supplies a single phase inverter (270Vac);
-- single phase inverters are connected in series (540Vac per phase);
-- hw and sw implementation;
-- n-independent time domains.
+The folder has its own README with the project descriptions.
