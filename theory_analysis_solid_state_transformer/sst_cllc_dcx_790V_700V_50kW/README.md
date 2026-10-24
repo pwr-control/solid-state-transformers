@@ -1,11 +1,13 @@
 # CLLC-DCX 790 V → 700 V, 50 kW, 35 kHz
 
 Simulink/Simscape bench of the isolated DC/DC stage of one SST module as a **DC transformer** (DCX):
-a symmetrical CLLC resonant converter with fixed ratio 9:8 between the 790 V DC link of the module
-(side 1, the DC link of the single-phase T-type inverter) and the isolated 700 V DC link (side 2),
+a symmetrical CLLC resonant converter with fixed ratio 9:8 between a 790 V DC link (side 1) and an
+isolated 700 V DC link (side 2),
 50 kW in both directions, 35 kHz, 1200 V SiC MOSFETs on both bridges. The sizing and the design
 choices are in [`cllc_dcx_sizing.md`](cllc_dcx_sizing.md); this file describes the model and how to
-run it. Rev. 02, 2026-10-24 (Rev. 01 was 800 V → 800 V at 50 kHz, 1:1).
+run it. 35 kHz variant (2026-10-24) of the 800 V → 800 V, 50 kHz bench in
+[`../sst_cllc_dcx_800V_800V_50kW`](../sst_cllc_dcx_800V_800V_50kW): same model diagram and scripts, its own
+parameters, sizing note and transformer.
 
 ## Sizing in short
 
@@ -23,7 +25,7 @@ run it. Rev. 02, 2026-10-24 (Rev. 01 was 800 V → 800 V at 50 kHz, 1:1).
 | Devices | `wolfspeed_SiC_MOSFET_CAB006M12GM3` on both bridges, 6.6 mΩ, Coss 0.79 nF |
 | Loss budget | about 400 W, η ≈ 99.2 % (the model adds 0.42 kW of numerical damping at tc = 50 ns, ten times more at 500 ns) |
 
-## Model `sst_cllc_dcx.slx`
+## Model `sst_cllc_dcx_35kHz.slx`
 
 Root: `battery_1` (790 V source of side 1, library block `lithium_ion_battery` with the capacitor at
 its terminals, `battery_voltage_init_m`), `dcdc_cllc_modA`, `global timing` (local clock
@@ -117,7 +119,7 @@ the `private` folder of another project of this repository to reuse it there.
 
 | File | Content |
 |---|---|
-| `sst_cllc_dcx.slx` | Simulink/Simscape model |
+| `sst_cllc_dcx_35kHz.slx` | Simulink/Simscape model (same diagram as `sst_cllc_dcx.slx` of the 800 V bench) |
 | `init_model.m` | builds `param`; writes the DCX tank over the library one; `param.sim.sink`, `use_coss`, `tc` |
 | `private/cllc_dcx_param.m` | the numbers of this DCX: operating point, tank, transformer, DC links, SR logic, bench |
 | `private/library_setup.m` | companion library on the path, cloned when missing |

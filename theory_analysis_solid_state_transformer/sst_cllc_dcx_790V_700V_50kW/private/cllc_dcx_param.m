@@ -10,12 +10,12 @@ function cllc = cllc_dcx_param(sink)
 %   the class derives), .sr and .sr1 (synchronous rectifier logic of the two bridges), .sink and .ic (the
 %   bench). Being in ./private it is seen only by the files of this folder.
 %
-%   The sizing is in ../cllc_dcx_sizing.md: fixed-ratio DC transformer (DCX) between the 790 V DC link of the
-%   SST module and its isolated 700 V DC link, 50 kW, both directions, 1200 V SiC MOSFETs on both bridges.
+%   The sizing is in ../cllc_dcx_sizing.md: fixed-ratio DC transformer (DCX) between a 790 V DC link and an
+%   isolated 700 V DC link, 50 kW, both directions, 1200 V SiC MOSFETs on both bridges.
 %   Values marked "TBC" are placeholders of the first run, to be confirmed with the hardware.
 %
-%   Rev. 01, 2026-10-24: 800 V -> 800 V, 50 kHz, 1:1 transformer.
-%   Rev. 02, 2026-10-24: 790 V -> 700 V (the DC links of the SST module), 35 kHz, 9:8 transformer on five
+%   2026-10-24: 35 kHz variant of the 800 V -> 800 V, 50 kHz, 1:1 bench (../sst_cllc_dcx_800V_800V_50kW):
+%   790 V -> 700 V, 9:8 transformer on five
 %   stacked UU93/152/30 sets, Lm = 560 uH, Lr1 = 16 uH, Cr1 = 1.17 uF.
 
     if nargin < 1
@@ -36,7 +36,7 @@ function cllc = cllc_dcx_param(sink)
     h.n1 = 9;                                   % turns: 9:8 = 0.889 gives 702 V at no load from 790 V, 700 V with the
     h.n2 = 8;                                   % drop at 50 kW; one layer of litz per winding on five stacked
                                                 % UU93/152/30 ferrite sets, Bpk 0.15 T (transformer_sizing.m)
-    h.udc1 = 790;                               % [V] DC link of the SST module (inverter side)
+    h.udc1 = 790;                               % [V] side 1, design point of the 35 kHz variant
     h.udc2 = 700;                               % [V] isolated DC link, nominal (udc1*n2/n1 = 702 V at no load)
     h.uac1 = h.udc1;                            % [V] square-wave amplitude on the tank
     h.uac2 = h.udc2;

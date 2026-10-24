@@ -1,6 +1,6 @@
 %[text] # transformer_sizing: first sizing of the 9:8 transformer of the CLLC-DCX 790 V -> 700 V, 50 kW, 35 kHz
-% Rev. 01, 2026-10-24: 800 V -> 800 V, 50 kHz, 1:1 on three stacked UU93/152/30 sets.
-% Rev. 02, 2026-10-24: 790 V -> 700 V, 35 kHz. Same method as ../magnetics_sizing/single_phaseDAB_TRsizing.m
+% 2026-10-24: 790 V -> 700 V, 35 kHz (the 800 V -> 800 V, 50 kHz, 1:1 sizing on three stacked UU93/152/30 sets is
+% ../sst_cllc_dcx_800V_800V_50kW/transformer_sizing.m). Same method as ../magnetics_sizing/single_phaseDAB_TRsizing.m
 % (Faraday's law with fixed turns, current density, copper loss, specific core loss, leakage estimate), with the
 % numbers of the DCX (cllc_dcx_sizing.md): 790 V square wave on the primary, 35 kHz, 72 A rms on the primary and
 % 81 A rms on the secondary (resonant half sines of 105 / 118 A peak, plus the magnetizing triangle of 10 A peak

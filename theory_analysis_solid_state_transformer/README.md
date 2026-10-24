@@ -28,18 +28,18 @@ control, output voltage controller and DC-link control; DC-DC control from `ctrl
   T-type inverter.
 - Same `plotting_results.m`, `power_loss_calculus.m`, `spectrum.m` set as the DAB bench.
 
-## `sst_cllc_dcx_790V_700V_50kW`
+## `sst_cllc_dcx_800V_800V_50kW`
 
-Bench of the isolated DC/DC stage of one SST module alone, as a DC transformer (DCX): CLLC
-resonant converter, 790 V in / 700 V out (n = 9/8), 50 kW in both directions, fs = 35 kHz just below
-the series resonance (fn = 0.95, fr = 36.8 kHz), both bridges at 50 % duty in phase, the rectifying bridge as
+Bench of the isolated DC/DC stage of one SST module alone, as a DC transformer (DCX): symmetrical
+CLLC resonant converter, 800 V / 800 V (n = 1), 50 kW in both directions, fs = 50 kHz just below
+the series resonance (fn = 0.95), both bridges at 50 % duty in phase, the rectifying bridge as
 synchronous rectifier driven by the sign of its own current, ZVS of the driving bridge from the
 magnetizing current, 1200 V SiC MOSFETs (`mos_simple_2th` with the Coss of the device) on both
 sides. The DCX runs open loop; the bench has a battery on side 1 and a current source on side 2,
 with load and sink modes (`param.sim.sink`).
 
 - `init_model.m` — `init_environment('sst_cllc_dcx')`, `param` structure by subsystem, Backward
-  Euler local solver at `tc = 50 ns`; the numbers are in `private/cllc_dcx_param.m`;
+  Euler local solver at the fixed step `param.sim.tc`; the numbers are in `private/cllc_dcx_param.m`;
   `private/library_setup.m` adds the library to the path (and clones it if it is missing).
 - `sst_cllc_dcx.slx` — the model (DC chokes and links, tank with the library transformer, two
   full bridges with the SR gate logic, modulator, logging).
@@ -48,6 +48,15 @@ with load and sink modes (`param.sim.sink`).
   run, bench modes, dependencies.
 - `cllc_analysis.m` (FHA), `transformer_sizing.m`, `power_loss_calculus.m`, `plotting_results.m`,
   `spectrum.m`, `non_virtual_blocks_counting.m`.
+
+## `sst_cllc_dcx_790V_700V_50kW`
+
+35 kHz variant of the bench above (2026-10-24): 790 V in / 700 V out (n = 9/8), 50 kW, fs = 35 kHz just
+below the series resonance (fn = 0.95, fr = 36.8 kHz), Lm = 560 µH, Lr1 = 16 µH, Cr1 = 1.17 µF (Q = 0.37),
+transformer on five stacked UU93/152/30 sets with one litz layer per winding. Same diagram
+(`sst_cllc_dcx_35kHz.slx`) and script set as `sst_cllc_dcx_800V_800V_50kW`, with its own
+`private/cllc_dcx_param.m`, `transformer_sizing.m` (alternatives with four and three sets in Sec. 6),
+sizing note and README.
 
 ## `magnetics_sizing`
 

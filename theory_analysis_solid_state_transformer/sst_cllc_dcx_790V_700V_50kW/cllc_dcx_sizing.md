@@ -1,16 +1,17 @@
 # CLLC-DCX 790 V → 700 V, 50 kW, 35 kHz: sizing note
 
-Rev. 02, 2026-10-24 (Rev. 01: 800 V → 800 V, 50 kHz, 1:1). Isolated DC/DC stage of one SST module
-working as a DC transformer (DCX): fixed ratio 9:8 between the 790 V DC link of the module (side 1, the
-DC link of the T-type inverter) and the isolated 700 V DC link (side 2), 50 kW in both directions. The
-numbers are in `private/cllc_dcx_param.m`, the model is `sst_cllc_dcx.slx` (see `README.md`). The
+2026-10-24, 35 kHz variant of the 800 V → 800 V, 50 kHz bench (`../sst_cllc_dcx_800V_800V_50kW`). Isolated
+DC/DC stage of one SST module
+working as a DC transformer (DCX): fixed ratio 9:8 between a 790 V DC link (side 1) and an isolated 700 V DC link
+(side 2), 50 kW in both directions. The
+numbers are in `private/cllc_dcx_param.m`, the model is `sst_cllc_dcx_35kHz.slx` (see `README.md`). The
 first-harmonic (FHA) curves come from `cllc_analysis.m`, the transformer from `transformer_sizing.m`.
 
 ## 1. Operating point
 
 | Quantity | Value | Note |
 |---|---|---|
-| Side 1 voltage u1 | 790 V | DC link of the SST module |
+| Side 1 voltage u1 | 790 V | design point of this variant |
 | Turns ratio n = n1 / n2 | 9 / 8 = 1.125 | one transformer, no cells in series/parallel |
 | Side 2 voltage u2 | 700 V nominal | u1 / n = 702 V at no load, about 699 V at 50 kW (R_eq, Sec. 7) |
 | Power P | 50 kW | at the DCX input, both directions |

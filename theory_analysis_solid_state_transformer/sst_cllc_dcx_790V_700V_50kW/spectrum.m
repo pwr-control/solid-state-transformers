@@ -1,5 +1,5 @@
 %[text] # spectrum: spectra of the tank current and of the DC link ripple
-% Rev. 01, 2026-10-24: SST CLLC-DCX 790 V -> 700 V, 50 kW, 35 kHz (Rev. 02; Rev. 01 was 800 V -> 800 V, 50 kHz). Run after the simulation or after
+% 2026-10-24: SST CLLC-DCX 790 V -> 700 V, 50 kW, 35 kHz (variant of the 800 V -> 800 V, 50 kHz bench). Run after the simulation or after
 % load('sim_results_xx.mat'): FFT over the last n_per switching periods of i1 (tank, side 1), of the DC link 2
 % voltage and of the DC link 1 current. The DCX ripple is at 2 fs (rectified half sines) and its multiples;
 % the tank current is at fs and its odd multiples. The EPS file goes to ./figures.

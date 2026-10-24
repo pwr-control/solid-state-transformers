@@ -1,8 +1,8 @@
-% Count of the nonvirtual blocks of sst_cllc_dcx.slx, referenced models included (MATLAB Home licence:
+% Count of the nonvirtual blocks of sst_cllc_dcx_35kHz.slx, referenced models included (MATLAB Home licence:
 % at most 1000 nonvirtual blocks per model, library links and masks included).
 clc
 
-mdl = 'sst_cllc_dcx.slx';
+mdl = 'sst_cllc_dcx_35kHz.slx';
 load_system(mdl);
 
 % referenced models (Model Reference), if any

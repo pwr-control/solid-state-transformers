@@ -1,5 +1,5 @@
 %[text] # cllc_analysis: first-harmonic analysis of the CLLC-DCX tank
-% Rev. 01, 2026-10-24: SST CLLC-DCX 790 V -> 700 V, 50 kW, 35 kHz (Rev. 02; Rev. 01 was 800 V -> 800 V, 50 kHz). Reads param (init_model.m or sim_results_xx.mat).
+% 2026-10-24: SST CLLC-DCX 790 V -> 700 V, 50 kW, 35 kHz (variant of the 800 V -> 800 V, 50 kHz bench). Reads param (init_model.m or sim_results_xx.mat).
 % Secondary elements reflected to the primary (n = n1/n2, 9/8 for this stage; the script is general).
 % Load: FHA resistance Rac = 8 n^2 u2^2/(pi^2 P) at 10, 50, 100 % load.
 % Last part: power versus phase displacement of the two bridges (the modulator of the model can drive the

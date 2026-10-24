@@ -1,6 +1,6 @@
-%[text] # sst\_cllc\_dcx: model initialization (param structure by subsystem)
-% Rev. 02, 2026-10-24: SST CLLC-DCX stage, 790 V -> 700 V, 50 kW, 35 kHz (Rev. 01: 800 V -> 800 V, 50 kHz;
-% numbers in ./private/cllc_dcx_param.m,
+%[text] # sst\_cllc\_dcx\_35kHz: model initialization (param structure by subsystem)
+% 2026-10-24: 35 kHz variant of the SST CLLC-DCX stage, 790 V -> 700 V, 50 kW (the 800 V -> 800 V, 50 kHz bench
+% is ../sst_cllc_dcx_800V_800V_50kW; numbers in ./private/cllc_dcx_param.m,
 % sizing in cllc_dcx_sizing.md). Everything the model needs is in the struct "param", one group per
 % subsystem:
 %   param.sim       simulation settings (stop time, Simscape local solver step, bench mode, Coss option)
@@ -17,7 +17,7 @@
 %
 % Library dependence: the library provides classes and algorithms (timing_setup, hw_cllc_single_phase_setup,
 % ctrl_cllc_setup, device_mosfet_setup, device_mosfet_parallel, lithium_ion_battery_setup,
-% liquid_cooled_plate_2kw_setup) and the blocks of sst_cllc_dcx.slx (mos_simple_2th, single_phase_transformer,
+% liquid_cooled_plate_2kw_setup) and the blocks of sst_cllc_dcx_35kHz.slx (mos_simple_2th, single_phase_transformer,
 % dab_single_phase_pwm_modulator, lithium_ion_battery, discrete_time_low_pass_filter); the model's numbers stay
 % in this folder. A function that must be frozen or changed for this model only goes in ./private with the
 % same name: MATLAB resolves private functions before the path, for the files of this folder only, and the
@@ -28,7 +28,7 @@
 
 clear;
 library_setup;              % pwr-control/library on the path, cloned next to this repository when missing (./private/library_setup.m)
-[model, options] = init_environment('sst_cllc_dcx');
+[model, options] = init_environment('sst_cllc_dcx_35kHz');
 s = tf('s');
 param = struct();
 
@@ -193,7 +193,7 @@ if t_zvs > param.cllc.pwm.dead_time
 end
 clear im_pk c_leg t_zvs
 %[text] ## Battery (side 1)
-% battery_1 is the 790 V source of side 1 (the DC link of the SST module), sized on the DCX power; side 2
+% battery_1 is the 790 V source of side 1, sized on the DCX power; side 2
 % has the current source of the bench (param.cllc.sink), no battery
 param.battery.nominal_battery_voltage_1 = param.cllc.hw.udc1_nom;  % [V] 790 V
 param.battery.nominal_battery_power = param.cllc.pwr_nom;           % [W]

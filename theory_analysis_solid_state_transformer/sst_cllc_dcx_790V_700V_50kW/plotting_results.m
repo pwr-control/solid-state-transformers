@@ -1,5 +1,5 @@
 %[text] # plotting\_results: CLLC-DCX quantities
-% Rev. 01, 2026-10-24: SST CLLC-DCX 790 V -> 700 V, 50 kW, 35 kHz (Rev. 02; Rev. 01 was 800 V -> 800 V, 50 kHz). Reads param.*, axes scaled on param.cllc.hw,
+% 2026-10-24: SST CLLC-DCX 790 V -> 700 V, 50 kW, 35 kHz (variant of the 800 V -> 800 V, 50 kHz bench). Reads param.*, axes scaled on param.cllc.hw,
 % secondary quantities also shown referred to the primary (x n or / n; n = 1 for this stage).
 % Figure 1: whole run (DC side, current loop, device losses). Figure 2: last three switching periods
 % (tank, transformer, switches of the two bridges). Figures 3-7: start-up, magnetizing current and DC link 2
