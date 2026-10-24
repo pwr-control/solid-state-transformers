@@ -1,5 +1,5 @@
 %[text] # power_loss_calculus: check of a CLLC-DCX run against the sizing
-% Rev. 01, 2026-10-24: SST CLLC-DCX 800 V -> 800 V, 50 kW. Run after the simulation, or after
+% Rev. 01, 2026-10-24: SST CLLC-DCX 790 V -> 700 V, 50 kW, 35 kHz (Rev. 02; Rev. 01 was 800 V -> 800 V, 50 kHz). Run after the simulation, or after
 % load('sim_results_xx.mat'). Steady-state window: the last n_per periods of the switching frequency.
 % Design values from param (cllc_dcx_sizing.md): I1 peak = pi/2 Idc/fn, I1 rms = I1 peak sqrt(fn/2).
 % Sign convention of the model: current_battery_1 > 0 when the battery delivers power.

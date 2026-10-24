@@ -1,5 +1,6 @@
 %[text] # sst\_cllc\_dcx: model initialization (param structure by subsystem)
-% Rev. 01, 2026-10-24: SST CLLC-DCX stage, 800 V -> 800 V, 50 kW (numbers in ./private/cllc_dcx_param.m,
+% Rev. 02, 2026-10-24: SST CLLC-DCX stage, 790 V -> 700 V, 50 kW, 35 kHz (Rev. 01: 800 V -> 800 V, 50 kHz;
+% numbers in ./private/cllc_dcx_param.m,
 % sizing in cllc_dcx_sizing.md). Everything the model needs is in the struct "param", one group per
 % subsystem:
 %   param.sim       simulation settings (stop time, Simscape local solver step, bench mode, Coss option)
@@ -41,10 +42,12 @@ clear overrides
 % save('sim_results_01.mat', '-v7.3', '-regexp', '_sim$', '^param$');
 %[text] ## Simulation
 param.sim.simlength = 0.25;                 % [s] model StopTime
-param.sim.tc = 500e-9;                       % [s] logging base, model MaxStep and Simscape local solver step
-%     (glb_time.tc): 400 steps per switching period at 50 kHz, dead time = 6 steps. Backward Euler adds a
-%     numerical damping of about 2 (w^2 Lr1 tc/2 + tc/(2 Cr1)) = 0.125 Ohm on the tank (0.63 kW at full load,
-%     printed by power_loss_calculus.m): halve tc to halve it, the run takes twice as long
+param.sim.tc = 500e-9;                      % [s] logging base, model MaxStep and Simscape local solver step
+%     (glb_time.tc). Backward Euler adds a numerical damping of about 2 (w^2 Lr1 tc/2 + tc/(2 Cr1)) to the
+%     tank, proportional to tc (printed by power_loss_calculus.m): 50 ns = 571 steps per switching period,
+%     dead time 6 steps, 0.082 Ohm (0.42 kW at full load, Sec. 8 of the sizing note); 500 ns = 57 steps per
+%     period, dead time below one step, 0.82 Ohm (about 4.3 kW at full load and 50 V less on side 2). 500 ns
+%     for quick structural checks, 50 to 100 ns for the loss and ZVS numbers; the run time scales with 1/tc
 param.sim.nonlinear_iterations = 5;         % Simscape solver (Solver Configuration block of the model)
 
 % power flow: 0 = load, side 1 -> side 2; sink, side 2 -> side 1: 1 = battery + current source,
@@ -85,8 +88,8 @@ param.time.fpwm_isop_rail = param.time.fpwm;
 param.time.trgo_isop_rail = 1;                      % double update
 param.time.dead_time_isop_rail = 3e-6;
 %[text] ### CLLC PWM and bench
-% 800 V -> 800 V, 50 kW: the local numbers (pwr_nom, fres, pwm, hw_in, tank, sr, sr1, sink, ic) are in
-% ./private/cllc_dcx_param.m (fs = 50 kHz, fr = 52.6 kHz, dead time 300 ns)
+% 790 V -> 700 V, 50 kW: the local numbers (pwr_nom, fres, pwm, hw_in, tank, sr, sr1, sink, ic) are in
+% ./private/cllc_dcx_param.m (fs = 35 kHz, fr = 36.8 kHz, dead time 300 ns, 9:8 transformer)
 param.cllc = cllc_dcx_param(param.sim.sink);
 flow = {'load', 'sink, battery + current source', 'sink, mirror bench'};
 fprintf('Power flow: %s, sr.mode = %d (bridge 2), sr1.mode = %d (bridge 1)\n', ...
@@ -113,7 +116,7 @@ param.cllc.hw = hw_cllc_single_phase_setup(h.name, param.cllc.pwr_nom, h.udc1, h
     h.Cdc1_dc2, h.Cdc2_dc2, h.RCdc_dc1, h.RCdc1_dc1, h.RCdc2_dc1, h.RCdc_dc2, h.RCdc1_dc2, h.RCdc2_dc2, ...
     h.Ldc_dc1, h.Ldc_dc2, h.RLdc_dc1, h.RLdc_dc2);
 clear h
-% DCX tank of the sizing (Lr1 = 12 uH, Cr1 = 0.76 uF, Q = 0.38, Ln = 33) written over the Q = 1 tank that
+% DCX tank of the sizing (Lr1 = 16 uH, Cr1 = 1.17 uF, Q = 0.37, Ln = 35) written over the Q = 1 tank that
 % hw_cllc_single_phase_setup derives by itself. Same symmetrical layout as the class: Ls1 = Ld1 on the
 % primary, Ls2 = Ld2 = Ld1/n^2 and Cs2 = n^2*Cs1 on the secondary, Ls and Cs the series totals.
 t = param.cllc.tank;
@@ -129,7 +132,7 @@ param.cllc.hw.Ls = 2*t.Lr1;
 param.cllc.hw.Cs = t.Cr1/2;
 clear t
 % the current loop (commented out in the model: the DCX runs open loop) normalizes the primary DC current
-param.cllc.hw.Idc_FS = param.cllc.hw.idc1_nom;     % [A] 62.5 A
+param.cllc.hw.Idc_FS = param.cllc.hw.idc1_nom;     % [A] 63.3 A
 param.cllc.hw.displayInfo();
 fprintf('DCX tank: Lr1 = %.1f uH, Cr1 = %.3f uF, Lr2 = %.1f uH, Cr2 = %.3f uF, Lm = %.0f uH\n', ...
     1e6*param.cllc.hw.Ls1, 1e6*param.cllc.hw.Cs1, 1e6*param.cllc.hw.Ls2, 1e6*param.cllc.hw.Cs2, 1e6*param.cllc.hw.Lm);
@@ -145,9 +148,10 @@ param.dcdc.kp_idc = 0.5;
 param.dcdc.ki_idc = 18.0;
 param.cllc.ctrl = ctrl_cllc_setup(param.dcdc.kp_udc, param.dcdc.ki_udc, param.dcdc.kp_idc, param.dcdc.ki_idc);
 %[text] ### Power semiconductors
-% 800 V on both sides: the same 1200 V SiC half-bridge module on both bridges (Wolfspeed CAB006M12GM3,
-% 6.6 mOhm at 100 degC, Coss 0.79 nF). It has margin at 71.5 A rms (about 68 W of conduction losses per
-% bridge); a smaller module of about 13-16 mOhm is the cost option, with twice the conduction losses.
+% 790 V and 700 V: the same 1200 V SiC half-bridge module on both bridges (Wolfspeed CAB006M12GM3,
+% 6.6 mOhm at 100 degC, Coss 0.79 nF). It has margin at 72 A rms on side 1 and 81 A rms on side 2 (about
+% 69 W and 87 W of conduction losses); a smaller module of about 13-16 mOhm is the cost option, with twice
+% the conduction losses.
 param.dev.used_device_mosfet = 'wolfspeed_SiC_MOSFET_CAB006M12GM3';      % bridge 1 (side 1)
 param.dev.used_device_mosfet_sr = 'wolfspeed_SiC_MOSFET_CAB006M12GM3';   % bridge 2 (side 2, synchronous rectifier in load)
 
@@ -189,9 +193,9 @@ if t_zvs > param.cllc.pwm.dead_time
 end
 clear im_pk c_leg t_zvs
 %[text] ## Battery (side 1)
-% battery_1 is the 800 V source of side 1 (the DC link of the SST module), sized on the DCX power; side 2
+% battery_1 is the 790 V source of side 1 (the DC link of the SST module), sized on the DCX power; side 2
 % has the current source of the bench (param.cllc.sink), no battery
-param.battery.nominal_battery_voltage_1 = param.cllc.hw.udc1_nom;  % [V] 800 V
+param.battery.nominal_battery_voltage_1 = param.cllc.hw.udc1_nom;  % [V] 790 V
 param.battery.nominal_battery_power = param.cllc.pwr_nom;           % [W]
 param.battery.initial_battery_soc = 0.85;
 % lithium_ion_battery_setup takes the charge capacity [Ah] as third argument. ASSUMPTION: 1C rating,

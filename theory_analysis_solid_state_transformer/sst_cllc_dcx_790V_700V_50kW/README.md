@@ -1,30 +1,31 @@
-# CLLC-DCX 800 V → 800 V, 50 kW
+# CLLC-DCX 790 V → 700 V, 50 kW, 35 kHz
 
 Simulink/Simscape bench of the isolated DC/DC stage of one SST module as a **DC transformer** (DCX):
-a symmetrical CLLC resonant converter with fixed ratio 1:1 between the 800 V DC link of the module
-(side 1, the DC link of the single-phase T-type inverter) and the isolated 800 V DC link (side 2),
-50 kW in both directions, 50 kHz, 1200 V SiC MOSFETs on both bridges. The sizing and the design
+a symmetrical CLLC resonant converter with fixed ratio 9:8 between the 790 V DC link of the module
+(side 1, the DC link of the single-phase T-type inverter) and the isolated 700 V DC link (side 2),
+50 kW in both directions, 35 kHz, 1200 V SiC MOSFETs on both bridges. The sizing and the design
 choices are in [`cllc_dcx_sizing.md`](cllc_dcx_sizing.md); this file describes the model and how to
-run it.
+run it. Rev. 02, 2026-10-24 (Rev. 01 was 800 V → 800 V at 50 kHz, 1:1).
 
 ## Sizing in short
 
 | Quantity | Value |
 |---|---|
-| DC voltages | 800 V / 800 V, n = 1 (11 : 11) |
-| Power, DC current | 50 kW, 62.5 A |
-| fs, fr, dead time | 50 kHz, 52.6 kHz (fn = 0.95), 300 ns |
-| Tank, per side | Lr = 12 µH (4 µH leakage + discrete), Cr = 0.762 µF, Z0 = 4.0 Ω, Q = 0.38 |
-| Magnetizing inductance | 400 µH (Im = 10 A peak, ZVS in 126 ns), Ln = 33 |
-| Tank currents | 71.5 A rms, 113 A peak on both sides; 410 V peak on Cr |
-| Transformer | 3 stacked UU93/152/30 ferrite sets, 11 turns of litz per winding, 0.14 T, about 110 W |
+| DC voltages | 790 V / 700 V, n = n1 / n2 = 9 / 8 (702 V at no load, about 699 V at 50 kW) |
+| Power, DC currents | 50 kW, 63.3 A (side 1), 71.4 A (side 2) |
+| fs, fr, dead time | 35 kHz, 36.8 kHz (fn = 0.95), 300 ns |
+| Tank, side 1 | Lr1 = 16 µH (2 µH leakage + discrete), Cr1 = 1.17 µF, Z0 = 3.7 Ω, Q = 0.37 |
+| Tank, side 2 | Lr2 = Lr1 / n² = 12.6 µH, Cr2 = n² Cr1 = 1.48 µF |
+| Magnetizing inductance | 560 µH (Im = 10 A peak, ZVS in 124 ns), Ln = 35 |
+| Tank currents | 72.4 A rms, 115 A peak (side 1); 81.1 A rms, 118 A peak (side 2); 390 V / 345 V peak on Cr1 / Cr2 |
+| Transformer | 5 stacked UU93/152/30 ferrite sets, 9 and 8 turns of litz in one layer each, 0.15 T, about 122 W |
 | DC links, chokes | 500 µF / 1 mΩ and 250 µH / 2 mΩ per side (bench values) |
 | Devices | `wolfspeed_SiC_MOSFET_CAB006M12GM3` on both bridges, 6.6 mΩ, Coss 0.79 nF |
-| Loss budget | about 365 W, η ≈ 99.3 % (the model adds 0.63 kW of numerical damping at tc = 50 ns) |
+| Loss budget | about 400 W, η ≈ 99.2 % (the model adds 0.42 kW of numerical damping at tc = 50 ns, ten times more at 500 ns) |
 
 ## Model `sst_cllc_dcx.slx`
 
-Root: `battery_1` (800 V source of side 1, library block `lithium_ion_battery` with the capacitor at
+Root: `battery_1` (790 V source of side 1, library block `lithium_ion_battery` with the capacitor at
 its terminals, `battery_voltage_init_m`), `dcdc_cllc_modA`, `global timing` (local clock
 `time_cllc_module_1` and `time_master`), `load` (Controlled Current Source of side 2 with a ramp,
 `param.cllc.sink.I2` and `.t_ramp`; a resistor and a DC voltage source are kept commented out for the
@@ -34,14 +35,15 @@ mirror bench), `scopes`, `storage_data` (logs every `*_sim` variable at `param.g
 
 `dcdc_cllc_modA/dc/dc with galvanic isolation`: DC chokes `LFi_dc1/2`, DC link capacitors `CFi_dc1/2`
 (initial voltages `param.cllc.ic.vc_dc1/2`, priority High), the tank with the library
-`single_phase_transformer` (leakages `Ld1`, `Ld2` are `Lr1`, `Lr2`; `Cs1`, `Cs2` are `Cr1`, `Cr2`), the
-two full bridges of `mos_simple_2th` switches with the `Czvs` capacitor across each (Coss when
-`param.sim.use_coss = 1`), and the gate logic: `sr1_gate_logic` in front of bridge 1 and
-`sr_gate_logic` in front of bridge 2 select, with `param.cllc.sr1.mode` / `param.cllc.sr.mode`, between
-the modulator (mode 0), the synchronous rectifier driven by the sign of the own current (mode 1) and
-the diode rectifier (mode 2). `dcdc_cllc_modA/input_current_control` holds the modulator
-(`dab_single_phase_pwm_modulator`, 50 % duty on both bridges, phase displacement from the current
-loop, which is commented out: the DCX runs open loop with phase 0) and the normalization.
+`single_phase_transformer` (leakages `Ld1`, `Ld2` are `Lr1`, `Lr2`; `Cs1`, `Cs2` are `Cr1`, `Cr2`;
+turns `n1 : n2 = 9 : 8`), the two full bridges of `mos_simple_2th` switches with the `Czvs` capacitor
+across each (Coss when `param.sim.use_coss = 1`), and the gate logic: `sr1_gate_logic` in front of
+bridge 1 and `sr_gate_logic` in front of bridge 2 select, with `param.cllc.sr1.mode` /
+`param.cllc.sr.mode`, between the modulator (mode 0), the synchronous rectifier driven by the sign of
+the own current (mode 1) and the diode rectifier (mode 2). `dcdc_cllc_modA/input_current_control`
+holds the modulator (`dab_single_phase_pwm_modulator`, 50 % duty on both bridges, phase displacement
+from the current loop, which is commented out: the DCX runs open loop with phase 0) and the
+normalization.
 
 Both bridges read their device from `param`: bridge 1 `param.cllc.mosfet`, bridge 2
 `param.cllc.mosfet_sr` (one device per switch, or a bank of `param.cllc.sr.n_par` devices with
@@ -55,29 +57,31 @@ Both bridges read their device from `param`: bridge 1 `param.cllc.mosfet`, bridg
    session only, `savepath` to keep it), then builds `param` (one group per subsystem, numbers in
    `private/cllc_dcx_param.m`), prints the tank, the ZVS check of the driving bridge and the bench
    mode, opens the model.
-2. Simulate: 0.25 s (`param.sim.simlength`), the last 50 ms logged at `tc = 50 ns`
+2. Simulate: 0.25 s (`param.sim.simlength`), the last 50 ms logged at `tc` (`param.sim.tc`, 500 ns in
+   `init_model.m` for quick runs, 50 ns for the loss and ZVS numbers)
    (`param.time.t_measure`). The run starts near the steady state (initial voltages of the DC links),
-   the current source ramps to 62.5 A in 20 ms.
+   the current source ramps to 71.4 A in 20 ms.
 3. `power_loss_calculus.m`: powers, efficiency, R_eq, tank currents against the sizing, numerical
    damping, ZVS of the logged switches, losses per bridge. `plotting_results.m`: figures 1-7 (DC side,
    last three periods, start-up, magnetizing current and ripple, losses per switch, spectra, switching
    edges), EPS files in `figures/`. `spectrum.m`: spectra of the tank current and of the DC link
    ripple. `cllc_analysis.m`: FHA gain and input impedance at 10, 50 and 100 % load, power against
-   phase displacement. `transformer_sizing.m`: the transformer of the sizing note.
-   `non_virtual_blocks_counting.m`: nonvirtual block count (MATLAB Home licence limit).
+   phase displacement. `transformer_sizing.m`: the transformer of the sizing note and the alternatives
+   on the same core family. `non_virtual_blocks_counting.m`: nonvirtual block count (MATLAB Home
+   licence limit).
 4. Save a run with the commented `save(...)` line of `init_model.m` (`sim_results_xx.mat`, `*.mat`
    are ignored by git) and list it in this file.
 
 ## Power flow and bench modes (`param.sim.sink`)
 
-- **0, load**: `battery_1` feeds side 1, the current source draws +62.5 A from side 2. Bridge 1 driven
+- **0, load**: `battery_1` feeds side 1, the current source draws +71.4 A from side 2. Bridge 1 driven
   by the modulator (`sr1.mode = 0`), bridge 2 synchronous rectifier on i2 (`sr.mode = 1`).
-- **1, sink with battery and current source**: the current source pushes −62.5 A into side 2 (the
+- **1, sink with battery and current source**: the current source pushes −71.4 A into side 2 (the
   downstream stage in sink), `battery_1` is charged. Bridge 2 driven by the modulator at 50 % duty
   (`sr.mode = 0`), bridge 1 rectifies on i1 (`sr1.mode = 1`, or 2 for the body diodes). Same model, no
   block to swap.
-- **2, sink on the mirror bench**: resistor R1 = 12.8 Ω (`param.cllc.sink.R1`) in place of the
-  battery of `battery_1`, DC voltage source U2 = 811 V (`param.cllc.sink.U2`, set so that u1 = 800 V
+- **2, sink on the mirror bench**: resistor R1 = 12.5 Ω (`param.cllc.sink.R1`) in place of the
+  battery of `battery_1`, DC voltage source U2 = 707 V (`param.cllc.sink.U2`, set so that u1 = 790 V
   on R1 with `R_eq`) in place of the current source of `load`: comment the battery and the current
   source, uncomment the resistor and the voltage source. CFi_dc2 starts at U2.
 
@@ -86,8 +90,10 @@ in sink nothing drives the tank.
 
 ## Numerical settings
 
-- Backward Euler local solver at tc = 50 ns (400 steps per period, dead time = 6 steps). The method
-  adds about 2 (ω² Lr1 tc / 2 + tc / (2 Cr1)) = 0.125 Ω of damping to the tank, 0.63 kW at full load:
+- Backward Euler local solver at a fixed step tc: 50 ns = 571 steps per period, dead time = 6 steps. The
+  method adds about 2 (ω² Lr1 tc / 2 + tc / (2 Cr1)) of damping to the tank, proportional to tc: 0.082 Ω
+  and 0.42 kW at full load with 50 ns, 0.82 Ω and 4.3 kW (50 V less on side 2, dead time below one step)
+  with the 500 ns of `init_model.m`, good for quick structural checks only:
   `power_loss_calculus.m` prints it; halve `param.sim.tc` to halve it (twice the run time). The
   trapezoidal method rings on the switching edges, the Partitioning solver chatters on the SR bridge.
 - `param.sim.use_coss = 1`: the `Czvs` blocks are the Coss of the devices with a 10 ns time constant,
@@ -114,9 +120,10 @@ the `private` folder of another project of this repository to reuse it there.
 | `sst_cllc_dcx.slx` | Simulink/Simscape model |
 | `init_model.m` | builds `param`; writes the DCX tank over the library one; `param.sim.sink`, `use_coss`, `tc` |
 | `private/cllc_dcx_param.m` | the numbers of this DCX: operating point, tank, transformer, DC links, SR logic, bench |
+| `private/library_setup.m` | companion library on the path, cloned when missing |
 | `cllc_dcx_sizing.md` | sizing note: principle, tank and Lm, transformer, devices, DC links, loss budget, numerics, checks to do |
 | `cllc_analysis.m` | FHA gain, input impedance, power against phase shift |
-| `transformer_sizing.m` | first sizing of the 1:1 transformer (core stack, turns, gap, litz, losses, leakage) |
+| `transformer_sizing.m` | first sizing of the 9:8 transformer (core stack, turns, gap, litz, losses, leakage, alternatives) |
 | `power_loss_calculus.m` | checks a run against the sizing (powers, currents, ZVS, losses, numerical damping) |
 | `plotting_results.m`, `spectrum.m` | figures of a run (EPS in `figures/`) |
 | `non_virtual_blocks_counting.m` | nonvirtual block count of the model |
