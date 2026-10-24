@@ -1,15 +1,16 @@
 %[text] # power_loss_calculus: check of a CLLC-DCX run against the sizing
-% Rev. 02, 2026-10-06: FBK CLLC-DCX 660 V -> 73.3 V, 61 kW. Run after the simulation, or after
+% 2026-10-24: SST CLLC-DCX 790 V -> 700 V, 50 kW, 35 kHz (variant of the 800 V -> 800 V, 50 kHz bench). Run after the simulation, or after
 % load('sim_results_xx.mat'). Steady-state window: the last n_per periods of the switching frequency.
-% Design values: intro_report/PROP-2026-011-FBK-BIDCDC_rev1.tex, Sec. 4 (61 kW, fs = 35 kHz, fr = 37 kHz).
-% Sign convention of the model: current_battery_x > 0 when the battery delivers power.
-% Rev. 03: works also with the resistive load on side 2 (no battery 2, no current loop logged).
+% Design values from param (cllc_dcx_sizing.md): I1 peak = pi/2 Idc/fn, I1 rms = I1 peak sqrt(fn/2).
+% Sign convention of the model: current_battery_1 > 0 when the battery delivers power.
+% Works with the current source or the resistor on side 2, with or without the current loop logged.
 
 clc
 n_per = 50;                                         % periods in the averaging window
 fs = param.glb_time.fPWM_CLLC;
 hw = param.cllc.hw;
 n12 = hw.n1/hw.n2;
+fn = fs/param.cllc.fres;
 t = time_tc_sim(:);
 w = t >= t(end) - n_per/fs;
 tw = t(w);
@@ -19,7 +20,7 @@ pk = @(x) max(abs(x(w)));
 fund = @(x) 2*mean(x(w).*exp(-1i*2*pi*fs*tw));     % first harmonic, complex amplitude
 
 %[text] ## DC side
-% two benches: battery 2 on side 2 (voltage_battery_2_sim logged) or a load resistor through Ldc_dc2
+% two benches: battery 2 on side 2 (voltage_battery_2_sim logged) or a load (current source or resistor) through Ldc_dc2
 udc_1 = avg(voltage_battery_1_sim);   idc_1 = avg(current_battery_1_sim);
 p1 = avg(voltage_battery_1_sim.*current_battery_1_sim);     % delivered by battery 1
 p_conv_1 = avg(cllc_voltage_input_modA_sim.*cllc_current_input_modA_sim);
@@ -36,13 +37,13 @@ if exist('voltage_battery_2_sim', 'var')
         fprintf('  <-- both batteries deliver power: no transfer, the converter only dissipates\n');
     end
 else
-    % load resistor behind Ldc_dc2: its voltage is the DC link 2 voltage minus the drop on RLdc_dc2
+    % load behind Ldc_dc2: its voltage is the DC link 2 voltage minus the drop on RLdc_dc2
     idc_2 = avg(cllc_current_output_modA_sim);
     p_out = p_conv_2 - hw.RLdc_dc2*avg(cllc_current_output_modA_sim.^2);
     udc_2 = avg(cllc_voltage_output_modA_sim) - hw.RLdc_dc2*idc_2;
     fprintf('Load:      %7.1f V %8.1f A %8.1f kW (absorbed, %.3f Ohm)\n', udc_2, idc_2, p_out/1e3, udc_2/idc_2);
-    fprintf('Ideal DCX output udc1/n = %.1f V: %.1f V of drop (%.1f %%)\n', udc_1/n12, udc_1/n12 - udc_2, ...
-        100*(1 - n12*udc_2/udc_1));
+    fprintf('Ideal DCX output udc1/n = %.1f V: %.1f V of drop (%.2f %%), R_eq = %.1f mOhm seen from side 2\n', ...
+        udc_1/n12, udc_1/n12 - udc_2, 100*(1 - n12*udc_2/udc_1), 1e3*(udc_1/n12 - udc_2)/idc_2);
 end
 fprintf('DC link 2: mean %.1f V, min %.1f V, max %.1f V\n', avg(cllc_voltage_output_modA_sim), ...
     min(cllc_voltage_output_modA_sim(w)), max(cllc_voltage_output_modA_sim(w)));
@@ -55,7 +56,10 @@ fprintf('Converter terminals: %.1f kW (side 1), %.1f kW (side 2)\n\n', p_conv_1/
 i1 = i1_cllc_transformer_modA_sim;  i2 = i2_cllc_transformer_modA_sim;
 u1 = u1_cllc_transformer_modA_sim;  u2 = u2_cllc_transformer_modA_sim;
 p_scale = max(abs(p_conv_1), 1)/param.cllc.pwr_nom;     % design currents scaled to the actual power
-design.i1_rms = 106*p_scale;  design.i1_pk = 153*p_scale;  design.i2_rms = 950*p_scale;
+design.i1_pk = pi/2*hw.idc1_nom/fn*p_scale;             % resonant half sine of period 1/fr carrying Idc per half period
+design.i1_rms = design.i1_pk*sqrt(fn/2);
+design.i2_rms = design.i1_rms*n12;
+design.ucr1_pk = design.i1_pk/(2*pi*param.cllc.fres*hw.Cs1);
 phi_u = rad2deg(angle(fund(u1)) - angle(fund(u2)));     % lag of u2 on u1
 phi_u = mod(phi_u + 180, 360) - 180;
 fprintf('%-28s %12s %12s\n', 'quantity', 'simulation', 'design*');
@@ -65,8 +69,8 @@ fprintf('%-28s %12.1f %12.1f\n', 'i2 rms / A', rms_(i2), design.i2_rms);
 fprintf('%-28s %12.1f %12.1f\n', 'u1 fundamental / V', abs(fund(u1)), 4/pi*hw.udc1_nom);
 fprintf('%-28s %12.1f %12.1f\n', 'n*u2 fundamental / V', n12*abs(fund(u2)), 4/pi*hw.udc1_nom);
 fprintf('%-28s %12.1f %12.1f\n', 'phase lag u2 on u1 / deg', phi_u, 0);
-fprintf('%-28s %12.1f %12.1f\n', 'Cr1 peak voltage / V', pk(i1)/(2*pi*fs*hw.Cs1), 360*p_scale);
-fprintf('* design values of the report scaled to the input power (%.1f kW)\n', abs(p_conv_1)/1e3);
+fprintf('%-28s %12.1f %12.1f\n', 'Cr1 peak voltage / V', pk(i1)/(2*pi*fs*hw.Cs1), design.ucr1_pk);
+fprintf('* design values of the sizing scaled to the input power (%.1f kW)\n', abs(p_conv_1)/1e3);
 fprintf('  (Cr1 voltage estimated from the peak current, the capacitor voltage is not logged)\n\n');
 % power balance of the tank: between the u1 and u2 sensors there are only Cs1, the transformer and Cs2,
 % so the difference must match Rs1, Rs2 and Rfe. A larger gap is numerical: the Backward Euler local
@@ -76,7 +80,7 @@ p_tr_phys = hw.Rs1*rms_(i1)^2 + hw.Rs2*rms_(i2)^2 + (abs(fund(u1))/sqrt(2))^2/hw
 wh = 2*pi*fs;  h = param.glb_time.tc;
 r_num = 2*(wh^2*hw.Ld1*h/2 + h/(2*hw.Cs1));         % both sides, referred to the primary
 fprintf('Tank and transformer: %.2f kW lost, physical losses %.2f kW\n', (p_tr_1 - p_tr_2)/1e3, p_tr_phys/1e3);
-fprintf('  Backward Euler damping at tc = %.0f ns: about %.2f Ohm on the primary, %.2f kW at this current\n\n', ...
+fprintf('  Backward Euler damping at tc = %.0f ns: about %.3f Ohm on the primary, %.2f kW at this current\n\n', ...
     1e9*h, r_num, r_num*rms_(i1)^2/1e3);
 
 %[text] ## ZVS of the logged switches
@@ -92,11 +96,12 @@ fprintf('\n');
 cols = [1 6 11 16];
 p_loss_cllc_1 = mean(inverter_1_cllc_mosfet_zvs_modA_sim(w, cols));
 p_loss_cllc_2 = mean(inverter_2_cllc_mosfet_zvs_modA_sim(w, cols));
-fprintf('Bridge 1 (primary):   %s W, total %.0f W\n', mat2str(round(p_loss_cllc_1)), sum(p_loss_cllc_1));
-fprintf('Bridge 2 (secondary): %s W, total %.0f W\n', mat2str(round(p_loss_cllc_2)), sum(p_loss_cllc_2));
-fprintf('Report: about 155 W primary, 320 W secondary at 61 kW (0.2 mOhm per switch on the secondary)\n');
-fprintf('Model device: %s, Rds_on = %.2f mOhm on both bridges\n\n', param.dev.used_device_mosfet, ...
-    1e3*param.cllc.mosfet.Rds_on);
+fprintf('Bridge 1 (side 1): %s W, total %.0f W\n', mat2str(round(p_loss_cllc_1)), sum(p_loss_cllc_1));
+fprintf('Bridge 2 (side 2): %s W, total %.0f W\n', mat2str(round(p_loss_cllc_2)), sum(p_loss_cllc_2));
+fprintf('Sizing: conduction 2 Rds_on I1rms^2 = %.0f W (bridge 1, %.2f mOhm) and %.0f W (bridge 2, %.2f mOhm) at this current\n', ...
+    2*param.cllc.mosfet.Rds_on*rms_(i1)^2, 1e3*param.cllc.mosfet.Rds_on, ...
+    2*param.cllc.mosfet_sr.Rds_on*rms_(i2)^2, 1e3*param.cllc.mosfet_sr.Rds_on);
+fprintf('Devices: bridge 1 %s, bridge 2 %s\n\n', param.dev.used_device_mosfet, param.dev.used_device_mosfet_sr);
 p_loss_cllc = sum(p_loss_cllc_1) + sum(p_loss_cllc_2);
 
 %[text] ## Current loop (if logged)
@@ -112,7 +117,7 @@ if exist('cllc_current_ctrl_output_sim', 'var')
 else
     fprintf('Current loop not logged (open loop, phase displacement 0)\n');
 end
-clear n_per fs hw n12 t w tw avg rms_ pk fund i1 i2 u1 u2 p_scale design phi_u cols uctrl iref imeas wh h r_num
+clear n_per fs hw n12 fn t w tw avg rms_ pk fund i1 i2 u1 u2 p_scale design phi_u cols uctrl iref imeas wh h r_num
 
 function zvs_check(name, uds, ids, udc, w)
     uds = uds(:); ids = ids(:);

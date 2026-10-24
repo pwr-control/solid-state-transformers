@@ -1,11 +1,12 @@
-%[text] # plotting\_sim\_results: CLLC-DCX quantities
-% Rev. 02, 2026-10-06: FBK CLLC-DCX 660 V -> 73.3 V. Reads param.* (no more glb_time / hwdata), axes
-% scaled on param.cllc.hw, secondary quantities also shown referred to the primary (x n or / n).
+%[text] # plotting\_results: CLLC-DCX quantities
+% 2026-10-24: SST CLLC-DCX 790 V -> 700 V, 50 kW, 35 kHz (variant of the 800 V -> 800 V, 50 kHz bench). Reads param.*, axes scaled on param.cllc.hw,
+% secondary quantities also shown referred to the primary (x n or / n; n = 1 for this stage).
 % Figure 1: whole run (DC side, current loop, device losses). Figure 2: last three switching periods
-% (tank, transformer, primary and secondary switches). Rev. 04: figures 3-7 (start-up, magnetizing
-% current and DC link 2 ripple, losses per switch, spectra, switching edges). Run after the simulation or after
-% load('sim_results_xx.mat'); the EPS files go to ./figures, with the power direction in the name.
-% Rev. 03: works with battery 2 or with the load resistor on side 2, with or without the current loop.
+% (tank, transformer, switches of the two bridges). Figures 3-7: start-up, magnetizing current and DC link 2
+% ripple, losses per switch, spectra, switching edges. Run after the simulation or after
+% load('sim_results_xx.mat'); the EPS files go to ./figures, with the power direction in the name
+% (pdir: side 1 -> side 2, ndir: side 2 -> side 1).
+% Works with battery 2 or with the current source / load resistor on side 2, with or without the current loop.
 
 close all
 tratto1 = 1;
@@ -28,7 +29,7 @@ t1c = t2c - 3*tpwm;
 t0c = t(1);
 if ~exist('run_tag', 'var')
     if mean(current_battery_1_sim(t > t2c - 50*tpwm)) >= 0
-        run_tag = 'pdir';                       % power from side 1 (660 V) to side 2
+        run_tag = 'pdir';                       % power from side 1 to side 2
     else
         run_tag = 'ndir';
     end
@@ -147,7 +148,7 @@ print_landscape(gcf, ['CLLC_startup_' run_tag]);
 
 %[text] ## Figure 4: magnetizing current and DC link 2 ripple (last three periods)
 % sign convention of the logged currents: i1 into the primary, i2 out of the secondary, so the
-% magnetizing current referred to the primary is i1 - i2/n (about 12 A peak by design)
+% magnetizing current referred to the primary is i1 - i2/n (about 10 A peak by design)
 figure;
 subplot 211
 im = i1_cllc_transformer_modA_sim - i2_cllc_transformer_modA_sim/n12;

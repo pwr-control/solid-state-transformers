@@ -1,9 +1,9 @@
 %[text] # cllc_analysis: first-harmonic analysis of the CLLC-DCX tank
-% Rev. 02, 2026-10-06: FBK CLLC-DCX 660 V -> 73.3 V. Reads param (init_model.m or sim_results_xx.mat).
-% Secondary elements reflected to the primary (n = n1/n2 = 9): the old version added Ls2, Cs2 unreflected,
-% which was correct only for n = 1. Load: FHA resistance Rac = 8 n^2 u2^2/(pi^2 P) at 10, 50, 100 % load.
-% Last part: power versus phase displacement of the two bridges (the model drives the bridges with a
-% phase-shift loop, as a DAB with resonant tank).
+% Rev. 01, 2026-10-24: SST CLLC-DCX 800 V -> 800 V, 50 kW. Reads param (init_model.m or sim_results_xx.mat).
+% Secondary elements reflected to the primary (n = n1/n2, 1 for this stage; the script is general).
+% Load: FHA resistance Rac = 8 n^2 u2^2/(pi^2 P) at 10, 50, 100 % load.
+% Last part: power versus phase displacement of the two bridges (the modulator of the model can drive the
+% bridges with a phase shift, as a DAB with resonant tank; the DCX runs with phase 0).
 
 close all
 s = tf('s');
@@ -51,6 +51,7 @@ phi = linspace(-90, 90, 361);
 fprintf('Tank reactance at fs: X = %.3f Ohm (negative: capacitive, fs < fr)\n', X);
 fprintf('Phase-shift transfer: Pmax = %.0f kW at 90 deg; %.0f kW need %.1f deg\n', ...
     Pmax/1e3, param.cllc.pwr_nom/1e3, asind(param.cllc.pwr_nom/Pmax));
+fprintf('(a loop on the phase shift would have a huge gain and would push the DCX into capacitive mode)\n');
 figure; plot(phi, V1*V2*sind(phi)/2/X/1e3, 'k', 'LineWidth', 2); grid on
 xlabel('phase lag of u_2 on u_1 / deg'); ylabel('P_{1 \rightarrow 2} / kW');
 title('Power versus phase displacement (FHA, lossless)');
