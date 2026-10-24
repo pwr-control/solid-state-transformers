@@ -28,6 +28,26 @@ control, output voltage controller and DC-link control; DC-DC control from `ctrl
   T-type inverter.
 - Same `plotting_results.m`, `power_loss_calculus.m`, `spectrum.m` set as the DAB bench.
 
+## `sst_cllc_dcx_800V_800V_50kW`
+
+Bench of the isolated DC/DC stage of one SST module alone, as a DC transformer (DCX): symmetrical
+CLLC resonant converter, 800 V / 800 V (n = 1), 50 kW in both directions, fs = 50 kHz just below
+the series resonance (fn = 0.95), both bridges at 50 % duty in phase, the rectifying bridge as
+synchronous rectifier driven by the sign of its own current, ZVS of the driving bridge from the
+magnetizing current, 1200 V SiC MOSFETs (`mos_simple_2th` with the Coss of the device) on both
+sides. The DCX runs open loop; the bench has a battery on side 1 and a current source on side 2,
+with load and sink modes (`param.sim.sink`).
+
+- `init_model.m` — `init_environment('sst_cllc_dcx')`, `param` structure by subsystem, Backward
+  Euler local solver at `tc = 50 ns`; the numbers are in `private/cllc_dcx_param.m`.
+- `sst_cllc_dcx.slx` — the model (DC chokes and links, tank with the library transformer, two
+  full bridges with the SR gate logic, modulator, logging).
+- `cllc_dcx_sizing.md` — sizing note (operating point, principle, tank and Lm, transformer,
+  devices, DC links, loss budget, numerical settings, checks to do); `README.md` — model, how to
+  run, bench modes, dependencies.
+- `cllc_analysis.m` (FHA), `transformer_sizing.m`, `power_loss_calculus.m`, `plotting_results.m`,
+  `spectrum.m`, `non_virtual_blocks_counting.m`.
+
 ## `magnetics_sizing`
 
 First-cut design of the medium-frequency transformers with nanocrystalline cut cores
