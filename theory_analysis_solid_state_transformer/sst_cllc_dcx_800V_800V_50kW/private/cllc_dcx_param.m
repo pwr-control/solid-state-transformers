@@ -22,7 +22,8 @@ function cllc = cllc_dcx_param(sink)
 
     % ------------------------------------------------------------------ operating point and PWM
     cllc.pwr_nom = 50e3;                        % [W] nominal power at the DCX input
-    cllc.pwm.fpwm = 50e3;                       % [Hz] switching frequency
+    % cllc.pwm.fpwm = 50e3;                       % [Hz] switching frequency
+    cllc.pwm.fpwm = 35e3;                       % [Hz] switching frequency
     cllc.pwm.trgo = 0;                          % single update (control trigger once per period)
     cllc.pwm.dead_time = 300e-9;                % [s] primary bridge, ZVS with Im = 10 A (see init_model.m)
     cllc.fres = cllc.pwm.fpwm/0.95;             % [Hz] series resonance 52.6 kHz, fn = fs/fr = 0.95: the resonant
@@ -33,8 +34,10 @@ function cllc = cllc_dcx_param(sink)
     h.name = 'SST_CLLC_DCX_800V_800V_50kW';
     h.n1 = 11;                                  % turns, 1:1 transformer (transformer_sizing.m: three stacked
     h.n2 = 11;                                  % UU93/152/30 ferrite sets, 11 turns in one layer, Bpk 0.14 T)
+    % h.n2 = 9;                                  % UU93/152/30 ferrite sets, 11 turns in one layer, Bpk 0.14 T)
     h.udc1 = 800;                               % [V] DC link of the SST module (inverter side)
     h.udc2 = h.udc1*h.n2/h.n1;                  % [V] 800 V, isolated DC link
+    % h.udc2 = 800;                  % [V] 800 V, isolated DC link
     h.uac1 = h.udc1;                            % [V] square-wave amplitude on the tank
     h.uac2 = h.udc2;
     h.idc1 = cllc.pwr_nom/h.udc1;               % [A] 62.5 A, normalization and end scale (Idc_FS)
