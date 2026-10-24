@@ -56,7 +56,7 @@ clear overrides
 %[text] ## Simulation
 param.sim.simlength = 1.25;                 % [s] model StopTime: current reference step at t_ref = 0.35 s, 1 pu reached
 %     at 0.85 s (slew 2 pu/s), the last t_measure = 0.2 s logged in steady state
-param.sim.tc = 500e-9;                      % [s] model FixedStep and MaxStep, Simscape local solver step, logging base
+param.sim.tc = 100e-9;                      % [s] model FixedStep and MaxStep, Simscape local solver step, logging base
 %     (glb_time.tc, and sample time of the two DCX blocks through p.pwm.tc). 500 ns = 500 steps per PWM period of
 %     the inverters (4 kHz) and 40 per switching period of the DCX (50 kHz, dead time 300 ns below one step).
 %     Backward Euler adds a numerical damping of about 2 (w^2 Lr1 tc/2 + tc/(2 Cr1)) to each resonant tank,
