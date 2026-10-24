@@ -20,9 +20,13 @@
 % dab_single_phase_pwm_modulator, lithium_ion_battery, discrete_time_low_pass_filter); the model's numbers stay
 % in this folder. A function that must be frozen or changed for this model only goes in ./private with the
 % same name: MATLAB resolves private functions before the path, for the files of this folder only, and the
-% list of such overrides is printed at every run.
+% list of the files of ./private is printed at every run. The first command of the script, library_setup
+% (./private/library_setup.m), adds the library to the path with its subfolders: it uses the copy already on the
+% path, else the folder "library" next to this repository (or the one named by the environment variable
+% PWR_CONTROL_LIBRARY), and clones https://github.com/pwr-control/library when neither exists.
 
 clear;
+library_setup;              % pwr-control/library on the path, cloned next to this repository when missing (./private/library_setup.m)
 [model, options] = init_environment('sst_cllc_dcx');
 s = tf('s');
 param = struct();
@@ -30,7 +34,7 @@ param = struct();
 % functions overridden for this model: ./private takes precedence over the library
 overrides = dir(fullfile(fileparts(mfilename('fullpath')), 'private', '*.m'));
 if ~isempty(overrides)
-    fprintf('%s init: local overrides in private/: %s\n', model, strjoin({overrides.name}, ', '));
+    fprintf('%s init: local functions in private/ (precedence over the library): %s\n', model, strjoin({overrides.name}, ', '));
 end
 clear overrides
 

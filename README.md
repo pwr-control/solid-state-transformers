@@ -18,7 +18,8 @@ the organization page (`pwr-control/docs/solid_state_transformers`).
 
 - MATLAB with Simulink, Simscape and Simscape Electrical.
 - The companion [library](https://github.com/pwr-control/library) repository on the MATLAB
-  path **with subfolders**: masked power stages (full bridges with ideal switch / MOSFET
+  path **with subfolders** (`init_model.m` of the CLLC-DCX project does it by itself through
+  `private/library_setup.m`, cloning the library next to this repository when it is missing): masked power stages (full bridges with ideal switch / MOSFET
   thermal / MOSFET ZVS models, three-level T-type inverter, DAB and three-level PWM
   modulators with global TRGO, DC link, lithium-ion battery, single-phase transformer),
   the Simscape-language switch `mos_simple_2th` used by the CLLC-DCX bench, C-Caller control

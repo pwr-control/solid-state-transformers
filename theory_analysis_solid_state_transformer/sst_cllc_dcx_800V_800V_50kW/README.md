@@ -49,8 +49,12 @@ Both bridges read their device from `param`: bridge 1 `param.cllc.mosfet`, bridg
 
 ## How to run
 
-1. `init_model.m`: builds `param` (one group per subsystem, numbers in `private/cllc_dcx_param.m`),
-   prints the tank, the ZVS check of the driving bridge and the bench mode, opens the model.
+1. `init_model.m`: first puts the companion library on the path (`private/library_setup.m`: the copy
+   already on the path, else the folder `library` next to this repository or the one named by the
+   environment variable `PWR_CONTROL_LIBRARY`, cloned from GitHub when it does not exist; for this
+   session only, `savepath` to keep it), then builds `param` (one group per subsystem, numbers in
+   `private/cllc_dcx_param.m`), prints the tank, the ZVS check of the driving bridge and the bench
+   mode, opens the model.
 2. Simulate: 0.25 s (`param.sim.simlength`), the last 50 ms logged at `tc = 50 ns`
    (`param.time.t_measure`). The run starts near the steady state (initial voltages of the DC links),
    the current source ramps to 62.5 A in 20 ms.
@@ -99,7 +103,9 @@ parameter), `discrete_time_low_pass_filter`. Functions and classes: `init_enviro
 `timing_setup`, `hw_cllc_single_phase_setup`, `ctrl_cllc_setup`, `device_mosfet_setup`,
 `device_mosfet_parallel`, `lithium_ion_battery_setup`, `liquid_cooled_plate_2kw_setup`, device dataset
 `wolfspeed_SiC_MOSFET_CAB006M12GM3`. The flat names `Tambient` and `DThs_init` are exported to the base
-workspace for the thermal sources of the library bridges.
+workspace for the thermal sources of the library bridges. `private/library_setup.m` adds the library to
+the path (and clones it next to this repository when missing) at the start of `init_model.m`; copy it into
+the `private` folder of another project of this repository to reuse it there.
 
 ## Files
 
