@@ -2,31 +2,36 @@
 
 ## `sst_based_on_full_bridge_ttype_inverter`
 
-Two-module SST: two isolated DC-DC converters paralleled on the battery/DC side, each
-feeding a three-level T-type single-phase full bridge; the two inverters are series-connected
-on the AC side (blocks `dab_modA/modB`, `single_phase_inverter_modA/modB`, `battery_1/2`).
-Grid-side control: FHT-based single-phase PLL, virtual dq frame, dq vector PI current
-control, output voltage controller and DC-link control; DC-DC control from `ctrl_dab_setup` /
-`ctrl_cllc_setup`.
-
-### `sst_single_phase_dab_single_phase_ttype_inv`
-- `init_model.m` — `init_environment('sst_dab_ttype_inv')`, Simscape step `ts/100`.
-- `sst_dab_ttype_inv.slx` — single-phase DAB (constant 12 kHz, power flow by phase shift
-  between the bridges, ZVS-capable MOSFET bridge model) + T-type inverter.
-- `plotting_results.m` — DAB input/output and transformer quantities, DC grid (battery) and
-  AC grid quantities, inverter output and Q1/Q2 losses and waveforms, DAB primary and
-  secondary device losses and waveforms; EPS output.
-- `power_loss_calculus.m` — mean losses of the DAB bridges and of the inverter over the last
-  0.5 s, AC/DC powers, efficiency from both sides.
-- `spectrum.m` — FFT of the AC-side current.
+Two-module SST: two isolated DC-DC converters paralleled on the battery side, each feeding a
+three-level T-type single-phase full bridge; the two inverters are series-connected on the AC
+side. Grid-side control: FHT-based single-phase PLL, virtual dq frame, dq vector PI current
+control on module A, module B applying the same voltage command.
 
 ### `sst_single_phase_cllc_single_phase_ttype_inv`
-- `init_model.m` — `init_environment('sst_cllc_ttype_inv')`, Simscape step `ts/200`; the
-  CLLC DC capacitors are reduced to `Cdc/5` with respect to the library default.
-- `sst_cllc_ttype_inv.slx` — resonant CLLC (constant 12 kHz, tank tuned at
-  `1.2 × fPWM_CLLC`, power flow by phase shift between primary and secondary bridges) +
-  T-type inverter.
-- Same `plotting_results.m`, `power_loss_calculus.m`, `spectrum.m` set as the DAB bench.
+
+Since 2026-10-24 the isolated stage is the library block `cllc_dcx/cllc_dcx_mod1` (CLLC-DCX
+800 V → 800 V, 50 kW, 50 kHz, open loop, one per module), fed by two 800 V packs in parallel;
+2 × 50 kW on a 797 V rms single-phase line (398 V per module), T-type inverters at 4 kHz with
+double update on 800 V DC links.
+
+- `init_model.m` — `param` structure by subsystem (numbers in `private/sst_cllc_ttype_param.m`,
+  DCX from `cllc_dcx_param_example(tc)` of the library), Backward Euler local solver at
+  `param.sim.tc` = 500 ns, 1.25 s run with the last 0.2 s logged; `private/library_setup.m` adds
+  the library to the path (and clones it if it is missing); the flat names of the old init are
+  exported for the model until it is migrated.
+- `update_sst_cllc_ttype_inv.m` — fixes the model around the new DCX blocks (mask `p`, battery 2,
+  stale scopes and logs of the removed stage, logging of the DCX vectors and of module B, current
+  reference) and, with `'migrate'`, rewrites every legacy name of the model to `param.*`.
+- `sst_cllc_ttype_inv.slx` — the model: batteries, two DCX wrappers, global timing, line source,
+  two inverter modules (DC link, T-type bridge with thermal model, output filter, control),
+  scopes, storage.
+- `power_loss_calculus.m` — battery, DCX (per module, with the Backward Euler damping estimate),
+  inverter and line powers, losses, efficiency. `plotting_results.m` — DC side, AC side, last grid
+  period, last DCX periods, switch losses (EPS in `figures/`). `spectrum.m` — line current,
+  module voltage and battery current spectra, THD. `README.md` — model, fixes, how to run.
+
+The former DAB bench of this group (`sst_single_phase_dab_single_phase_ttype_inv`) was removed
+on 2026-10-24 (still in the git history).
 
 ## `sst_cllc_dcx_800V_800V_50kW`
 
