@@ -56,7 +56,7 @@ clear overrides
 %[text] ## Simulation
 param.sim.simlength = 1.25;                 % [s] model StopTime: current reference step at t_ref = 0.35 s, 1 pu reached
 %     at 0.85 s (slew 2 pu/s), the last t_measure = 0.2 s logged in steady state
-param.sim.tc = 100e-9;                      % [s] model FixedStep and MaxStep, Simscape local solver step, logging base
+param.sim.tc = 1e-6;                      % [s] model FixedStep and MaxStep, Simscape local solver step, logging base
 %     (glb_time.tc, and sample time of the two DCX blocks through p.pwm.tc). 500 ns = 500 steps per PWM period of
 %     the inverters (4 kHz) and 40 per switching period of the DCX (50 kHz, dead time 300 ns below one step).
 %     Backward Euler adds a numerical damping of about 2 (w^2 Lr1 tc/2 + tc/(2 Cr1)) to each resonant tank,
@@ -111,13 +111,13 @@ param.time.delay_pwm = 0;
 % INV are set alike. The battery blocks sample at ts_dab. The other stages are needed by the shared timing object only.
 param.time.fpwm_afe = param.time.fpwm;
 param.time.trgo_afe = 1;                            % double update
-param.time.dead_time_afe = 3e-6;                    % [s] dead time of the T-type bridges
+param.time.dead_time_afe = 0.3e-6;                    % [s] dead time of the T-type bridges
 param.time.fpwm_inv = param.time.fpwm;
 param.time.trgo_inv = 1;
 param.time.dead_time_inv = 3e-6;
 param.time.fpwm_single_phase_inv = param.time.fpwm;
 param.time.trgo_single_phase_inv = 1;
-param.time.dead_time_single_phase_inv = 3e-6;
+param.time.dead_time_single_phase_inv = 0.3e-6;
 param.time.fpwm_dab = 3*param.time.fpwm;
 param.time.trgo_dab = 1;
 param.time.dead_time_dab = 2e-6;
