@@ -14,11 +14,13 @@ Since 2026-10-24 the isolated stage is the library block `cllc_dcx/cllc_dcx_mod1
 2 × 50 kW on a 797 V rms single-phase line (398 V per module), T-type inverters at 4 kHz with
 double update on 800 V DC links.
 
-- `init_model.m` — `param` structure by subsystem (numbers in `private/sst_cllc_ttype_param.m`,
-  DCX from `cllc_dcx_param_example(tc)` of the library), Backward Euler local solver at
-  `param.sim.tc` = 500 ns, 1.25 s run with the last 0.2 s logged; `private/library_setup.m` adds
-  the library to the path (and clones it if it is missing); the flat names of the old init are
-  exported for the model until it is migrated.
+- `init_model.m` — simulation settings only (`param.sim`: 1.25 s run, Backward Euler local
+  solver at `param.sim.tc`, 1 µs, the last 0.2 s logged); the rest of `param` (one group per
+  subsystem) is built by `private/sst_cllc_ttype_setup.m` from the numbers of
+  `private/sst_cllc_ttype_param.m` and from `cllc_dcx_param_example(tc)` of the library;
+  `private/library_setup.m` adds the library to the path (and clones it if it is missing);
+  `private/sst_cllc_ttype_legacy.m` exports the flat names of the old init for the model until
+  it is migrated.
 - `update_sst_cllc_ttype_inv.m` — fixes the model around the new DCX blocks (mask `p`, battery 2,
   stale scopes and logs of the removed stage, logging of the DCX vectors and of module B, current
   reference) and, with `'migrate'`, rewrites every legacy name of the model to `param.*`.

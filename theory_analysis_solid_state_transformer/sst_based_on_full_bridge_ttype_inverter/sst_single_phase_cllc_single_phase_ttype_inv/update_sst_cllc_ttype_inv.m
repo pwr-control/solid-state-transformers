@@ -2,9 +2,11 @@ function update_sst_cllc_ttype_inv(mode)
 %UPDATE_SST_CLLC_TTYPE_INV  Fix sst_cllc_ttype_inv.slx after the change to the library CLLC-DCX blocks (2026-10-24).
 %
 %   update_sst_cllc_ttype_inv             fixes only: the model keeps reading the legacy flat names, which
-%                                         init_model.m exports (param.sim.export_legacy_names = 1)
+%                                         private/sst_cllc_ttype_legacy.m exports while
+%                                         param.sim.export_legacy_names = 1 in init_model.m
 %   update_sst_cllc_ttype_inv('migrate')  fixes, then every legacy name in the model rewritten to param.*
-%                                         (afterwards set param.sim.export_legacy_names = 0 in init_model.m)
+%                                         (afterwards set param.sim.export_legacy_names = 0 in init_model.m and
+%                                         delete private/sst_cllc_ttype_legacy.m)
 %
 %   Run from this folder, after init_model (param in the base workspace; the function runs init_model by itself
 %   when param is missing). Idempotent: what is already right is left alone, so it can be run again after a change
@@ -17,7 +19,7 @@ function update_sst_cllc_ttype_inv(mode)
 %        fixed-step model does not compile, and the two carriers could not be interleaved)
 %     2. battery_2 aligned to battery_1: ts_battery = glb_time.ts_dab (was ts_cllc), battery_voltage_init_m =
 %        param.battery.nominal_battery_voltage_2 (was ..._1); the masks of both read C1 of the pack as it is (the
-%        /100 of battery_1 moved to init_model.m)
+%        /100 of battery_1 is in private/sst_cllc_ttype_setup.m)
 %     3. scopes of the removed stage deleted: scopes_dcdc_modA, scopes_dcdc_modB, "CLLCs input current/voltage",
 %        "CLLCs output current/voltage", "dcdc input/output voltages"
 %     4. every From block whose tag has no Goto left in the model (cllc_* and *_cllc_transformer_* signals of the
@@ -37,7 +39,7 @@ function update_sst_cllc_ttype_inv(mode)
 %        (module B applies the voltage command of module A, the constant is kept for its own loop)
 %     7. 'migrate' only: every parameter of every block (masks and library instances included) and the solver
 %        settings of the model (StopTime, FixedStep, MaxStep) rewritten with the table of legacy_table (same
-%        table as the last section of init_model.m), whole names only, names already param.* untouched
+%        table as private/sst_cllc_ttype_legacy.m), whole names only, names already param.* untouched
 %   Not touched: the library blocks inside (links), the control, the wiring of the power stage, the configuration
 %   set apart from the three solver parameters of 'migrate'.
 
@@ -217,7 +219,8 @@ function update_sst_cllc_ttype_inv(mode)
         n_mig = n_mig + set_once(mdl, 'StopTime', 'param.sim.simlength');
         n_mig = n_mig + set_once(mdl, 'FixedStep', 'param.glb_time.tc');
         n_mig = n_mig + set_once(mdl, 'MaxStep', 'param.glb_time.tc');
-        fprintf('  migration: %d parameters rewritten to param.*; set param.sim.export_legacy_names = 0 in init_model.m\n', n_mig);
+        fprintf(['  migration: %d parameters rewritten to param.*; set param.sim.export_legacy_names = 0 in init_model.m ' ...
+            'and delete private/sst_cllc_ttype_legacy.m\n'], n_mig);
         n = n + n_mig;
     end
 
@@ -301,7 +304,7 @@ function v2 = legacy_to_param(v)
 end
 
 function tbl = legacy_table()
-%LEGACY_TABLE  legacy name (regular expression) -> param.* name; the same table as the last section of init_model.m.
+%LEGACY_TABLE  legacy name (regular expression) -> param.* name; the same table as private/sst_cllc_ttype_legacy.m.
 %   nb: not preceded by a word character or a dot (a name already under param.* is left alone); ne: whole name.
     nb = '(?<![\w.])';
     ne = '(?![\w.])';

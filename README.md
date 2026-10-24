@@ -38,9 +38,10 @@ the organization page (`pwr-control/docs/solid_state_transformers`).
    `.thermal`, ...; the numbers of the bench are in `private/*_param.m`, those of the DCX in
    `cllc_dcx_param_example.m` of the library), prints the operating point and opens the model.
    The SST bench runs 1.25 s with the inverters at 4 kHz (double update) and the DCX at 50 kHz,
-   2 × 50 kW, two 800 V packs, `wolfspeed_SiC_MOSFET_CAB006M12GM3` with thermal model; the
+   2 × 50 kW, two 800 V packs, `wolfspeed_SiC_MOSFET_CAB006M12GM3` with thermal model (its
+   `init_model.m` holds the simulation settings only, the rest is built in `private/`); the
    CLLC-DCX benches run 0.25 s with the last 50 ms logged. All of them use the Simscape
-   Backward Euler local solver with the fixed step `param.sim.tc` (500 ns in the SST bench,
+   Backward Euler local solver with the fixed step `param.sim.tc` (1 µs in the SST bench,
    50 to 500 ns in the DCX benches: the method damps the resonant tank in proportion to tc,
    see the READMEs).
 2. Simulate the `.slx`. In the SST bench, the first time, run `update_sst_cllc_ttype_inv.m`
