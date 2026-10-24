@@ -41,7 +41,7 @@ clear overrides
 % save('sim_results_01.mat', '-v7.3', '-regexp', '_sim$', '^param$');
 %[text] ## Simulation
 param.sim.simlength = 0.25;                 % [s] model StopTime
-param.sim.tc = 50e-9;                       % [s] logging base, model MaxStep and Simscape local solver step
+param.sim.tc = 500e-9;                       % [s] logging base, model MaxStep and Simscape local solver step
 %     (glb_time.tc): 400 steps per switching period at 50 kHz, dead time = 6 steps. Backward Euler adds a
 %     numerical damping of about 2 (w^2 Lr1 tc/2 + tc/(2 Cr1)) = 0.125 Ohm on the tank (0.63 kW at full load,
 %     printed by power_loss_calculus.m): halve tc to halve it, the run takes twice as long
