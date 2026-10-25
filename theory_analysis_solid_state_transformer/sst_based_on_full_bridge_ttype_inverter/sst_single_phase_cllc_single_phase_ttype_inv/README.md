@@ -156,10 +156,11 @@ Until the migration is run, `private/sst_cllc_ttype_legacy.m` (called by `init_m
 
 1. `init_model.m`: puts the companion library on the path (`private/library_setup.m`: the copy
    already on the path, else the folder `library` next to this repository or the one named by
-   the environment variable `PWR_CONTROL_LIBRARY`, cloned from GitHub when it does not exist),
-   sets `param.sim`, builds the rest of `param` (`private/sst_cllc_ttype_setup.m` on the numbers
-   of `private/sst_cllc_ttype_param.m` and `cllc_dcx_param_example(tc)`), opens the model, exports
-   the legacy names.
+   the environment variable `PWR_CONTROL_LIBRARY`, cloned from GitHub when it does not exist; all
+   its subfolders are added at every run, so a folder added to the library after `savepath` is
+   seen too), sets `param.sim`, builds the rest of `param` (`private/sst_cllc_ttype_setup.m` on the
+   numbers of `private/sst_cllc_ttype_param.m`, `cllc_dcx_param_example(tc)` and
+   `afe_single_phase_ttype_param_example(tc)`), opens the model, exports the legacy names.
 2. First time only: `update_sst_cllc_ttype_inv('compact')` for the compact T-type modules
    (`update_sst_cllc_ttype_inv` keeps the old ones, `update_sst_cllc_ttype_inv('migrate')`
    drops the legacy names), check the Diagnostic Viewer, commit the saved `.slx`.
