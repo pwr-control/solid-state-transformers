@@ -11,8 +11,10 @@ folder was re-done around them (`init_model.m`, `update_sst_cllc_ttype_inv.m`, t
 2026-10-25: the two T-type modules get their compact version too, the library block
 `afe_single_phase_ttype/afe_single_phase_ttype_mod1` (power stage in Simscape language, control
 in a MATLAB Function, module B slave of module A) in the wrappers
-`single_phase_inverter_modA_cmp` / `modB_cmp`; `update_sst_cllc_ttype_inv('compact')` puts them
-in place of the old modules.
+`single_phase_inverter_modA_cmp` / `modB_cmp`. The folder keeps two models of the same bench:
+`sst_cllc_ttype_inv.slx` with the compact modules and `sst_cllc_ttype_inv_discrete.slx` with the
+modules built from the discrete blocks of the library (switch losses and thermal model); the
+init, the parameters and the scripts are shared, `param.sim.model` chooses the model.
 
 ## Numbers in short (`private/sst_cllc_ttype_param.m`, `cllc_dcx_param_example.m` of the library)
 
@@ -24,7 +26,7 @@ in place of the old modules.
 | Inverter (per module) | udc 800 V, ubez = 0.9 udc = 720 V, is_nom 125.5 A, fpwm 4 kHz double update, dead time 300 ns, CFi 3 mF (CFi1 = CFi2 = 6 mF), LFu 500 µH, CFu 50 µF + 50 mΩ, `wolfspeed_SiC_MOSFET_CAB006M12GM3` with thermal model |
 | Line | 690/√3 = 398.4 V rms per module (563.4 V peak, `param.grid.u_pk_module`), 796.7 V rms in total, 50 Hz, 0.5 mH + 10 mΩ per inductor (5 %) |
 | Control | old modules: dq PI kp 0.5, ki 45 at ts_inv = 125 µs; compact modules: kp 0.1, ki 20 (`ctrl_in.kp_i`, `ki_i`: 0.5 / 45 are unstable with the first harmonic tracker in the feedback and the 1.4 kHz filter resonance, see `afe_single_phase_ttype_param_example.m`), gates on from 0.1 s; reference 1 pu from 0.35 s with 2 pu/s; CTRPIFF_CLIP_RELEASE 0.001 |
-| Run | 1.25 s, tc = 1 µs (`param.sim.tc`, Backward Euler), last 0.2 s logged at tc |
+| Run | 1.25 s, tc = `param.sim.tc` (100 ns since 2026-10-25, 1 µs for the structural checks; Backward Euler, see Numerical settings), last 0.2 s logged at tc |
 
 Values marked TBC in the parameter file (DC link bank, filter, line impedance, devices) are
 placeholders of the first run.
@@ -33,18 +35,19 @@ placeholders of the first run.
 
 | File | Content |
 |---|---|
-| `sst_cllc_ttype_inv.slx` | Simulink/Simscape model |
-| `init_model.m` | simulation settings only (`param.sim`: `simlength`, `tc`, `nonlinear_iterations`, `export_legacy_names`), then `param = sst_cllc_ttype_setup(param)`, opens the model, exports the legacy names |
-| `private/sst_cllc_ttype_param.m` | the numbers of the bench: modules, DCX operating point (`mode`, `interleave`), line, inverter hardware and control (the compact modules included: `kp_i`, `ki_i`, `t_enable`, `i_noise_cov`), timing, batteries, ADC, heatsink, device names |
+| `sst_cllc_ttype_inv.slx` | Simulink/Simscape model with the compact T-type modules (library block `afe_single_phase_ttype`, one nonvirtual block per converter) |
+| `sst_cllc_ttype_inv_discrete.slx` | the same bench with the T-type modules built from the discrete blocks of the library (`dclink`, `output_filter`, T-type bridge with switch losses and thermal model, `single phase inverter control`): the model of 2026-10-24, before the compact modules |
+| `init_model.m` | simulation settings only (`param.sim`: `model`, `simlength`, `tc`, `nonlinear_iterations`, `export_legacy_names`), then `param = sst_cllc_ttype_setup(param)`, opens the chosen model, exports the legacy names |
+| `private/sst_cllc_ttype_param.m` | the numbers of the bench: modules, DCX operating point (`mode`, `interleave`), line, inverter hardware and control (the compact modules included: `kp_i`, `ki_i`, `t_enable`, `i_noise_std`), timing, batteries, ADC, heatsink, device names |
 | `private/sst_cllc_ttype_setup.m` | builds `param` from the numbers: DCX mask structs `param.cllc.p_mod1/2`, `param.glb_time`, inverter `hw`/`ctrl`/`sogi`/`mosfet`, mask structs of the compact modules `param.spinv.p_modA/B` (from `afe_single_phase_ttype_param_example(tc)`), battery packs, heatsink |
 | `private/sst_cllc_ttype_legacy.m` | the flat names of the old init in the base workspace (table legacy name → `param.*`); delete it after the migration of the model |
 | `private/library_setup.m` | library on the path (clone when missing) |
-| `update_sst_cllc_ttype_inv.m` | fixes the model after the changes to the library blocks (DCX, AFE); `'compact'` puts the compact T-type modules in place of the old ones; `'migrate'` drops the legacy names |
+| `legacy/update_sst_cllc_ttype_inv.m` | archived: the script that updated the models after the changes to the library blocks (DCX, AFE), already applied to both; `'migrate'` (legacy names → `param.*`) is the only mode left to use |
 | `power_loss_calculus.m` | powers, losses, efficiency, Backward Euler estimate |
 | `plotting_results.m`, `spectrum.m` | figures of a run (EPS in `figures/`) |
 | `non_virtual_blocks_counting.m` | nonvirtual block count of the model |
 
-`param`, one group per subsystem: `param.sim` (simulation), `.time` (inputs of the timing object),
+`param`, one group per subsystem: `param.sim` (simulation, `.model`), `.time` (inputs of the timing object),
 `.glb_time` (`timing_setup`), `.cllc` (DCX stage, `.p_mod1/2` mask structs, `.idx`), `.sst`
 (modules), `.grid` (line), `.spinv` (T-type inverter of one module: `.hw_in`/`.hw`,
 `.ctrl_in`/`.ctrl`, `.sogi`, `.mosfet`, `.ideal_switch`, `.i_ref`, `.t_ref`, `.i_ref_slew`; compact
@@ -57,40 +60,50 @@ the library and take the numbers of this folder: `hw` (Vth and Rds_on of `param.
 conduction drop, CFi1/CFi2 banks, LFu/2 per line, CFu, bases ubez 720 V / ibez 177.5 A / 800 V,
 DC link started at 800 V), `pwm` (fpwm, double update, dead time of `param.time`, `tc` of the run,
 `t_enable`), `ctrl` (ts_inv, omega_nom, u_pk_module, 11-bit quantization, current noise of rms
-sqrt(i_noise_cov / tc), observer gains placed again on ts_inv, kp_i / ki_i, references). Module A
+`i_noise_std`, observer gains placed again on ts_inv, kp_i / ki_i, references). Module A
 is the master (its own PLL and current loop, `sync_out` = [theta_hat; m_d; m_q] on the Goto
 `synch_AFE_mtos`), module B the slave (`p.ctrl.slave = 1`, it applies the angle and the modulation
 vector of A, as `udq_ctrl_out_modA` did for the old modules).
 
-## Model `sst_cllc_ttype_inv.slx`
+## Models `sst_cllc_ttype_inv.slx` and `sst_cllc_ttype_inv_discrete.slx`
 
-Root: `battery_1`, `battery_2` (library `lithium_ion_battery`, the only Solver Configuration of
-the model is in `battery_1`: the DCX blocks connect the two sides in one physical network),
-`cllc_dcx_mod1`, `cllc_dcx_mod2` (wrappers around `cllc_dcx/cllc_dcx_mod1`, Gotos
-`cllc_dcx_m_mod1/2` [15×1] and `cllc_dcx_ctrl_log_mod1/2` [24×1]), `global timing`
+Root, common to both: `battery_1`, `battery_2` (library `lithium_ion_battery`; one Solver
+Configuration in the model, in `line_source`: the DCX blocks connect the two sides in one
+physical network), `cllc_dcx_mod1`, `cllc_dcx_mod2` (wrappers around `cllc_dcx/cllc_dcx_mod1`,
+Gotos `cllc_dcx_m_mod1/2` [15×1] and `cllc_dcx_ctrl_log_mod1/2` [24×1]), `global timing`
 (`time_master`, `time_afe_module_A/B`, `time_cllc_module_A/B`), `line_source` (two Controlled
 Voltage Sources of `u_pk_module · n_modules / 2` each, two line inductors, voltage and current
-sensors), `single_phase_inverter_modA/B` (old modules: `dclink` block of the library,
-`output_filter`, `single phase afe` with the T-type bridge `mosfet_based_three_level_inverter_ttype`,
-`single phase inverter control`), `single_phase_inverter_modA_cmp/modB_cmp` (compact modules:
-wrappers around `afe_single_phase_ttype/afe_single_phase_ttype_mod1`, same ports as the old modules,
-`udc(+)/udc(-)` left and `uac(+)/uac(-)` right; inside, From `time_master` on `t_master`, the sync
-link `synch_AFE_mtos` from A to B, Gotos `afe_cmp_m_modX` [13×1] and `afe_cmp_ctrl_log_modX` [32×1]
-and, after `'compact'`, the Gain `m_to_legacy` that rebuilds the old log tags in physical units),
-`scopes`, `storage_data_sst` (every `*_sim` log at `glb_time.tc`, last `t_measure` s).
+sensors), `scopes`, `storage_data_sst` (every `*_sim` log at `glb_time.tc`, last `t_measure` s).
+The T-type modules, DC link on side 2 of `cllc_dcx_mod1/2` and AC sides in series between `u1`
+and `u2` of `line_source`:
 
-The model holds one pair of modules active at a time: after `update_sst_cllc_ttype_inv` (mode
-`'fix'`) the old modules are wired and the wrappers commented out; after
-`update_sst_cllc_ttype_inv('compact')` the wrappers are wired (DC link on side 2 of
-`cllc_dcx_mod1/2`, AC sides in series between `u1` and `u2` of `line_source`) and the old modules
-are deleted (they stay in the git history of the `.slx`).
+- `sst_cllc_ttype_inv.slx`: `single_phase_inverter_modA_cmp/modB_cmp`, wrappers around
+  `afe_single_phase_ttype/afe_single_phase_ttype_mod1` (`udc(+)/udc(-)` left, `uac(+)/uac(-)`
+  right; inside, From `time_master` on `t_master`, the sync link `synch_AFE_mtos` from A to B,
+  Gotos `afe_cmp_m_modX` [13×1] and `afe_cmp_ctrl_log_modX` [32×1], the Gain `m_to_legacy` that
+  rebuilds the old log tags in physical units). Mask `p` = `param.spinv.p_modA` / `p_modB`. No
+  switching losses nor thermal model: the conduction drop (Vth, Rds_on) is in the block.
+- `sst_cllc_ttype_inv_discrete.slx`: `single_phase_inverter_modA/B` (`dclink` block of the
+  library, `output_filter`, `single phase afe` with the T-type bridge
+  `mosfet_based_three_level_inverter_ttype` and its thermal model, `single phase inverter
+  control` with the dq vector PI at kp 0.5 / ki 45; module B applies `udq_ctrl_out_modA`).
+  Logs `mosfet_ploss_invQ1..4_sim` and the device scopes exist here only.
 
-### What `update_sst_cllc_ttype_inv.m` fixes (run once per change, then commit the .slx)
+The two models share the init, the parameters and the scripts: `param.sim.model` in
+`init_model.m` chooses the one to open and simulate; the log names are the same, so
+`power_loss_calculus.m`, `plotting_results.m` and `spectrum.m` work on either run (they skip the
+logs a model does not have).
 
-The model of 2026-10-24 has the new DCX blocks and the one of 2026-10-25 the wrappers of the
-compact T-type modules, but the rest of the diagram was not updated. `update_sst_cllc_ttype_inv`
-(after `init_model`; modes `'fix'` default, `'compact'`, `'migrate'`) does, idempotently, and
-saves the model:
+### `legacy/update_sst_cllc_ttype_inv.m` (archived: what it did to the models)
+
+The model of 2026-10-24 had the new DCX blocks and the one of 2026-10-25 the wrappers of the
+compact T-type modules, but the rest of the diagram was not updated. The script (after
+`init_model`; modes `'fix'` default, `'compact'`, `'migrate'`; second argument the model name)
+did the following, idempotently, and saved the model. Both models are already updated:
+`sst_cllc_ttype_inv.slx` is the result of `'compact'` (2026-10-25),
+`sst_cllc_ttype_inv_discrete.slx` the model after `'fix'` (2026-10-24, before the wrappers).
+Only `'migrate'` is left to use, from the project folder: `addpath('legacy')`, then
+`update_sst_cllc_ttype_inv('migrate', param.sim.model)`.
 
 1. mask `p` of the two DCX blocks → `param.cllc.p_mod1` / `param.cllc.p_mod2` (it was
    `cllc_dcx_param_example()`, i.e. a 50 ns block in a fixed-step model with a longer step: it
@@ -140,10 +153,10 @@ saves the model:
    included; then set `param.sim.export_legacy_names = 0` in `init_model.m` and delete
    `private/sst_cllc_ttype_legacy.m`.
 
-After `'compact'` the switch losses and temperatures of the T-type bridges are no longer
-available (`mosfet_ploss_invQ1..4_sim` disappear; `power_loss_calculus.m` and
-`plotting_results.m` skip them), the conduction drop of the devices is in the block (Vth,
-Rds_on).
+In the compact model the switch losses and temperatures of the T-type bridges are not
+available (`mosfet_ploss_invQ1..4_sim` are logged by the discrete model only;
+`power_loss_calculus.m` and `plotting_results.m` skip them), the conduction drop of the devices
+is in the block (Vth, Rds_on).
 
 Until the migration is run, `private/sst_cllc_ttype_legacy.m` (called by `init_model.m` while
 `param.sim.export_legacy_names = 1`) puts in the base workspace the flat names the model reads
@@ -160,21 +173,20 @@ Until the migration is run, `private/sst_cllc_ttype_legacy.m` (called by `init_m
    its subfolders are added at every run, so a folder added to the library after `savepath` is
    seen too), sets `param.sim`, builds the rest of `param` (`private/sst_cllc_ttype_setup.m` on the
    numbers of `private/sst_cllc_ttype_param.m`, `cllc_dcx_param_example(tc)` and
-   `afe_single_phase_ttype_param_example(tc)`), opens the model, exports the legacy names.
-2. First time only: `update_sst_cllc_ttype_inv('compact')` for the compact T-type modules
-   (`update_sst_cllc_ttype_inv` keeps the old ones, `update_sst_cllc_ttype_inv('migrate')`
-   drops the legacy names), check the Diagnostic Viewer, commit the saved `.slx`.
-3. Simulate: 1.25 s (`param.sim.simlength`), the last 0.2 s logged at `tc`
+   `afe_single_phase_ttype_param_example(tc)`), opens the model chosen by `param.sim.model`
+   (`'sst_cllc_ttype_inv'`, compact modules, or `'sst_cllc_ttype_inv_discrete'`), exports the
+   legacy names.
+2. Simulate: 1.25 s (`param.sim.simlength`), the last 0.2 s logged at `tc`
    (`param.time.t_measure`). The DC links start at their nominal voltage, the compact modules
    switch from 0.1 s (`t_enable`, PLL locked), the current reference steps at 0.35 s and ramps
    to 1 pu in 0.5 s.
-4. `power_loss_calculus.m`: battery, DCX (per module, with the Backward Euler damping),
+3. `power_loss_calculus.m`: battery, DCX (per module, with the Backward Euler damping),
    inverter and line powers, losses and efficiency over the last 5 grid periods.
    `plotting_results.m`: figures 1-5 (DC side, AC side, last grid period, last DCX periods,
    switch losses), EPS files in `figures/`. `spectrum.m`: spectra of the line current, of the
    module A voltage and of the battery current, THD of the line current.
    `non_virtual_blocks_counting.m`: nonvirtual block count (MATLAB Home licence limit).
-5. Save a run with `save('sim_results_01.mat', '-v7.3', '-regexp', '_sim$', '^param$')`
+4. Save a run with `save('sim_results_01.mat', '-v7.3', '-regexp', '_sim$', '^param$')`
    (`*.mat` are ignored by git) and list it in this file.
 
 ## Numerical settings
@@ -196,7 +208,7 @@ Until the migration is run, `private/sst_cllc_ttype_legacy.m` (called by `init_m
 
 Blocks: `cllc_dcx/cllc_dcx_mod1` (with `cllc_ssc_lib`),
 `afe_single_phase_ttype/afe_single_phase_ttype_mod1` (with `afe_ttype_ssc_lib`),
-`lithium_ion_battery`, and for the old modules `dclink_for_three_levels/dclink`,
+`lithium_ion_battery`, and for `sst_cllc_ttype_inv_discrete.slx` `dclink_for_three_levels/dclink`,
 `full_bridge_three_level_ttype_mosfet_based_model`, `single_phase_three_levels_PWM_modulator`,
 `dq_vector_pi`, `discrete_time_low_pass_filter`, `cstblocks_lti`. Functions and classes:
 `init_environment`, `timing_setup`, `hw_single_phase_inverter_setup`,
@@ -204,7 +216,7 @@ Blocks: `cllc_dcx/cllc_dcx_mod1` (with `cllc_ssc_lib`),
 `device_ideal_switch_setting`, `lithium_ion_battery_setup`, `liquid_cooled_plate_2kw_setup`,
 `cllc_dcx_param_example`, `cllc_dcx_log_index`, `afe_single_phase_ttype_param_example`,
 `afe_single_phase_ttype_log_index`, device dataset `wolfspeed_SiC_MOSFET_CAB006M12GM3`. The
-T-type bridge of the old modules reads the heatsink data from its mask (`heatsink.*`): no flat
+T-type bridge of the discrete model reads the heatsink data from its mask (`heatsink.*`): no flat
 thermal name is needed in the base workspace.
 
 ## Saved runs

@@ -1,14 +1,18 @@
 %[text] # sst\_cllc\_ttype\_inv: model initialization
 % Two-module SST: battery -> CLLC-DCX 800 V / 800 V (library block cllc_dcx/cllc_dcx_mod1) -> single-phase three-level
-% T-type inverter, 2 x 50 kW, the two inverters in series on a single-phase line. The model reads the struct "param",
-% one group per subsystem (README.md). Only the simulation settings are here: the numbers of the bench are in
-% ./private/sst_cllc_ttype_param.m, the library objects (timing, DCX blocks, inverter, batteries, heatsink) are built
-% by ./private/sst_cllc_ttype_setup.m, the DCX stage is cllc_dcx_param_example.m of the library.
+% T-type inverter, 2 x 50 kW, the two inverters in series on a single-phase line. Two models of the same bench share
+% this init: sst_cllc_ttype_inv.slx with the compact T-type modules (library block afe_single_phase_ttype) and
+% sst_cllc_ttype_inv_discrete.slx with the modules built from the discrete blocks of the library (switch losses and
+% thermal model). Both read the struct "param", one group per subsystem (README.md). Only the simulation settings are
+% here: the numbers of the bench are in ./private/sst_cllc_ttype_param.m, the library objects (timing, DCX blocks,
+% inverter, compact modules, batteries, heatsink) are built by ./private/sst_cllc_ttype_setup.m, the DCX stage is
+% cllc_dcx_param_example.m of the library, the compact modules start from afe_single_phase_ttype_param_example.m.
 
 clear;
 library_setup;                              % pwr-control/library on the path, cloned next to this repository when missing (./private)
-model = init_environment('sst_cllc_ttype_inv');
 %[text] ## Simulation
+param.sim.model = 'sst_cllc_ttype_inv';     % model to open and simulate: 'sst_cllc_ttype_inv' (compact T-type modules) or
+                                            %     'sst_cllc_ttype_inv_discrete' (discrete blocks, losses and temperatures)
 param.sim.simlength = 1.25;                 % [s] StopTime: current reference step at 0.35 s, 1 pu from 0.85 s, the last 0.2 s logged
 param.sim.tc = 1e-7;                        % [s] FixedStep and MaxStep, Simscape local solver step, logging base and sample time of
                                             %     the DCX blocks. Backward Euler damps each resonant tank by about
@@ -19,6 +23,7 @@ param.sim.export_legacy_names = 1;          % 1: the model still reads the flat 
 %[text] ## Parameters
 param = sst_cllc_ttype_setup(param);        % numbers of the bench and library objects (./private)
 %[text] ## Model
+model = init_environment(param.sim.model);
 open_system(model);
 cellfun(@(b) set_param(b, 'Open', 'off'), find_system(model, 'BlockType', 'Scope'));   % scopes closed at start
 if param.sim.export_legacy_names

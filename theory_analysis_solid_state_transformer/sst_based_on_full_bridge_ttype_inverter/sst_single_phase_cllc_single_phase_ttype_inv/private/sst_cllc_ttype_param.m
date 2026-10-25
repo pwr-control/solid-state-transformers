@@ -11,7 +11,7 @@ function bench = sst_cllc_ttype_param(p_dcx)
 %     .cllc     operating point of the DCX stage, interleaving and mode of the two blocks
 %     .spinv    single-phase three-level T-type inverter of one module: .hw_in (inputs of
 %               hw_single_phase_inverter_setup), .ctrl_in (gains and reference of the control; kp_i, ki_i,
-%               t_enable, i_noise_cov are for the compact modules, library block afe_single_phase_ttype)
+%               t_enable, i_noise_std are for the compact modules, library block afe_single_phase_ttype)
 %     .time     inputs of the timing object (carrier, dead time, logged window, battery sample time)
 %     .battery  the two packs in parallel on the 800 V bus
 %     .meas     ADC quantization of the acquisitions
@@ -22,7 +22,7 @@ function bench = sst_cllc_ttype_param(p_dcx)
 %
 %   Rev. 02, 2026-10-24: timing, ADC, thermal and device data moved here from init_model.m.
 %   Rev. 03, 2026-10-25: gains, enable time and acquisition noise of the compact modules (ctrl_in.kp_i, ki_i,
-%            t_enable, i_noise_cov).
+%            t_enable, i_noise_std).
 
     % ------------------------------------------------------------------ modules
     bench.sst.n_modules = 2;                                % two modules, DC sides in parallel, AC sides in series
@@ -111,8 +111,9 @@ function bench = sst_cllc_ttype_param(p_dcx)
                                                             % the feedback (unstable in the time domain); 0.1 / 20: crossover
                                                             % 510 rad/s, 53 deg, 0.37 at the resonance (afe_single_phase_ttype_param_example.m)
     c.t_enable = 0.1;                                       % [s] gates off and loops at rest while the PLL locks (3 grid periods)
-    c.i_noise_cov = 1e-10;                                  % [pu^2 s] noise power of the current acquisition of the old modules
-                                                            % (Band-Limited White Noise at tc): rms sqrt(i_noise_cov/tc), 0.01 pu at 1 us
+    c.i_noise_std = 0.01;                                   % [pu] rms of the Gaussian noise on the current sample of the control (0: off).
+                                                            % The old modules have a Band-Limited White Noise of power 1e-10 at tc, whose
+                                                            % rms sqrt(1e-10/tc) depends on the step: 0.01 pu at 1 us, 0.032 pu at 100 ns
     bench.spinv.ctrl_in = c;
 
     % ------------------------------------------------------------------ timing (inputs of timing_setup, param.glb_time)

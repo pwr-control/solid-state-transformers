@@ -112,15 +112,15 @@ function param = sst_cllc_ttype_setup(param)
     pa.pwm.dead_time = param.time.dead_time;        % [s]
     pa.pwm.phase = 0;                               % [rad]
     pa.pwm.t_enable = c.t_enable;                   % [s]
-    % control: the period and the grid of the bench, the acquisition of the old modules (11-bit quantization, white
-    % noise of power c.i_noise_cov at tc on the current sample), the observers placed again on ts_inv and omega_nom
+    % control: the period and the grid of the bench, the acquisition (11-bit quantization, Gaussian noise of rms
+    % c.i_noise_std on the current sample), the observers placed again on ts_inv and omega_nom
     pa.ctrl.ts = param.glb_time.ts_inv;             % [s] 125 us
     pa.ctrl.omega_nom = param.grid.omega_nom;       % [rad/s]
     pa.ctrl.fht_omega = param.grid.omega_nom;
     pa.ctrl.ug_nom = param.grid.u_pk_module/pa.hw.ubez;     % [pu] 0.78
     pa.ctrl.pll_tau = 2/param.grid.omega_nom;       % [s]
     pa.ctrl.adc_q = param.meas.adc11_quantization;
-    pa.ctrl.i_noise_std = sqrt(c.i_noise_cov/param.sim.tc);         % [pu] 0.01 at tc = 1 us
+    pa.ctrl.i_noise_std = c.i_noise_std;            % [pu]
     [pa.ctrl.obs_l1, pa.ctrl.obs_l2] = afe_obs_gains(pa.ctrl.omega_nom, pa.ctrl.ts);
     [pa.ctrl.fht_l1, pa.ctrl.fht_l2] = afe_fht_gains(pa.ctrl.fht_omega, pa.ctrl.fht_delta, pa.ctrl.ts);
     % current loop (kp_i / ki_i of the parameter file, not kp_inv / ki_inv: see there) and references of the bench

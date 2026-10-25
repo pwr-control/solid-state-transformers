@@ -1,6 +1,13 @@
-function update_sst_cllc_ttype_inv(mode)
+function update_sst_cllc_ttype_inv(mode, mdl)
 %UPDATE_SST_CLLC_TTYPE_INV  Fix sst_cllc_ttype_inv.slx after the changes to the library blocks (DCX 2026-10-24, AFE 2026-10-25).
 %
+%   ARCHIVED in ./legacy on 2026-10-25: both models of the folder are already updated (sst_cllc_ttype_inv.slx is the
+%   result of 'compact', sst_cllc_ttype_inv_discrete.slx the model before the compact modules, after 'fix'). Kept for
+%   the record and for 'migrate'. To run it: from the project folder, addpath('legacy'), then as below (it needs
+%   init_model and the model on the path).
+%
+%   update_sst_cllc_ttype_inv(mode, mdl)  other model of the folder, e.g. 'sst_cllc_ttype_inv_discrete'
+%                                         (default 'sst_cllc_ttype_inv')
 %   update_sst_cllc_ttype_inv             'fix': the old T-type modules single_phase_inverter_modA/B active and the
 %                                         wrappers of the compact modules single_phase_inverter_modA_cmp/modB_cmp
 %                                         commented out; the model keeps reading the legacy flat names, which
@@ -77,7 +84,9 @@ function update_sst_cllc_ttype_inv(mode)
     compact = strcmpi(mode, 'compact');
     assert(migrate || compact || strcmpi(mode, 'fix'), ...
         'update_sst_cllc_ttype_inv: mode is ''fix'', ''compact'' or ''migrate''');
-    mdl = 'sst_cllc_ttype_inv';
+    if nargin < 2 || isempty(mdl)
+        mdl = 'sst_cllc_ttype_inv';
+    end
 
     % param in the base workspace: the masks evaluate there
     if ~evalin('base', 'exist(''param'', ''var'')')
