@@ -10,7 +10,8 @@ function bench = sst_cllc_ttype_param(p_dcx)
 %     .grid     single-phase line the two inverters are series-connected to (line_source of the model)
 %     .cllc     operating point of the DCX stage, interleaving and mode of the two blocks
 %     .spinv    single-phase three-level T-type inverter of one module: .hw_in (inputs of
-%               hw_single_phase_inverter_setup), .ctrl_in (gains and reference of the control)
+%               hw_single_phase_inverter_setup), .ctrl_in (gains and reference of the control; kp_i, ki_i,
+%               t_enable, i_noise_std are for the compact modules, library block afe_single_phase_ttype)
 %     .time     inputs of the timing object (carrier, dead time, logged window, battery sample time)
 %     .battery  the two packs in parallel on the 800 V bus
 %     .meas     ADC quantization of the acquisitions
@@ -20,6 +21,8 @@ function bench = sst_cllc_ttype_param(p_dcx)
 %   first run, to be confirmed with the hardware.
 %
 %   Rev. 02, 2026-10-24: timing, ADC, thermal and device data moved here from init_model.m.
+%   Rev. 03, 2026-10-25: gains, enable time and acquisition noise of the compact modules (ctrl_in.kp_i, ki_i,
+%            t_enable, i_noise_std).
 
     % ------------------------------------------------------------------ modules
     bench.sst.n_modules = 2;                                % two modules, DC sides in parallel, AC sides in series
@@ -99,6 +102,18 @@ function bench = sst_cllc_ttype_param(p_dcx)
     c.t_ref = 0.35;                                         % [s] step time of the reference
     c.i_ref_slew = 2;                                       % [pu/s] rate limiter: 1 pu reached 0.5 s after the step
     c.clip_release = 0.001;                                 % CTRPIFF_CLIP_RELEASE of the PI blocks (dq_vector_pi)
+    % compact modules (library block afe_single_phase_ttype/afe_single_phase_ttype_mod1 in the wrappers
+    % single_phase_inverter_modA_cmp / modB_cmp; mask p = param.spinv.p_modA / p_modB, built by sst_cllc_ttype_setup.m
+    % from afe_single_phase_ttype_param_example(tc) and the numbers of this file): what differs from the old modules
+    c.kp_i = 0.1;                                           % dq vector PI of the compact blocks (pu): kp_inv / ki_inv above give
+    c.ki_i = 20;                                            % [1/s] 15 deg of phase margin at 1.7 krad/s and a loop gain of 1.9 at
+                                                            % the 1.4 kHz resonance of LFu / CFu with the first harmonic tracker in
+                                                            % the feedback (unstable in the time domain); 0.1 / 20: crossover
+                                                            % 510 rad/s, 53 deg, 0.37 at the resonance (afe_single_phase_ttype_param_example.m)
+    c.t_enable = 0.1;                                       % [s] gates off and loops at rest while the PLL locks (3 grid periods)
+    c.i_noise_std = 0.01;                                   % [pu] rms of the Gaussian noise on the current sample of the control (0: off).
+                                                            % The old modules have a Band-Limited White Noise of power 1e-10 at tc, whose
+                                                            % rms sqrt(1e-10/tc) depends on the step: 0.01 pu at 1 us, 0.032 pu at 100 ns
     bench.spinv.ctrl_in = c;
 
     % ------------------------------------------------------------------ timing (inputs of timing_setup, param.glb_time)

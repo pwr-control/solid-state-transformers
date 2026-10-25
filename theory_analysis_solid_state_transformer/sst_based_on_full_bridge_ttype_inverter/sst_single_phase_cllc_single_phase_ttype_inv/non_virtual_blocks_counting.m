@@ -1,6 +1,11 @@
 clc
 
-mdl = 'sst_cllc_ttype_inv.slx';
+% model to count: the one chosen in init_model (param.sim.model), else the compact one
+if exist('param', 'var') && isfield(param, 'sim') && isfield(param.sim, 'model')
+    mdl = param.sim.model;
+else
+    mdl = 'sst_cllc_ttype_inv';
+end
 load_system(mdl);
 
 % conta anche i modelli referenziati (Model Reference), se ce ne sono
