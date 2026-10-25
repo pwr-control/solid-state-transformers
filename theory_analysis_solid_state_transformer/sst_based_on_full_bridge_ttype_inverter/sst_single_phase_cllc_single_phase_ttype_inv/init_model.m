@@ -10,7 +10,7 @@ library_setup;                              % pwr-control/library on the path, c
 model = init_environment('sst_cllc_ttype_inv');
 %[text] ## Simulation
 param.sim.simlength = 1.25;                 % [s] StopTime: current reference step at 0.35 s, 1 pu from 0.85 s, the last 0.2 s logged
-param.sim.tc = 1e-6;                        % [s] FixedStep and MaxStep, Simscape local solver step, logging base and sample time of
+param.sim.tc = 1e-7;                        % [s] FixedStep and MaxStep, Simscape local solver step, logging base and sample time of
                                             %     the DCX blocks. Backward Euler damps each resonant tank by about
                                             %     2 (w^2 Lr1 tc/2 + tc/(2 Cr1)): 2.5 Ohm at 1 us, 0.25 Ohm at 100 ns (README.md)
 param.sim.nonlinear_iterations = 5;         % Simscape solver (Solver Configuration of battery_1, the only one of the model)
